@@ -97,8 +97,8 @@ export function createShader(gl, descriptor) {
 
 /**
  * @typedef ProgramDescriptor
- * @property {string} vertexSource
- * @property {string} fragmentSource
+ * @property {WebGLShader} vertexShader
+ * @property {WebGLShader} fragmentShader
  * 
  * @param {WebGL2RenderingContext} gl
  * @param {ProgramDescriptor} descriptor
@@ -110,26 +110,13 @@ export function createProgram(gl, descriptor) {
         throw new Error('Could not create program');
     }
 
-    const vertexShader = createShader(gl, {type: 'vertex', source: descriptor.vertexSource});
-    if (vertexShader === null) {
-        throw new Error('Could not create vertex shader');
-    }
-
-    const fragmentShader = createShader(gl, {type: 'fragment', source: descriptor.fragmentSource});
-    if (fragmentShader === null) {
-        throw new Error('Could not create fragment shader');
-    }
-
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
+    gl.attachShader(program, descriptor.vertexShader);
+    gl.attachShader(program, descriptor.fragmentShader);
 
     gl.linkProgram(program);
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
         console.error('Error linking program:', gl.getProgramInfoLog(program));
     }
-
-    gl.deleteShader(vertexShader);
-    gl.deleteShader(fragmentShader);
 
     return program;
 }

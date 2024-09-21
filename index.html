@@ -7,6 +7,7 @@
 </head>
 <body>
     <div id="canvasContainer"></div>
+    <button onclick="app.update()">Step</button>
 
     <script type="module">
         import ALifeTask from './src/alifetask.js';
@@ -14,13 +15,13 @@
         const width = 512;
         const height = 512;
 
-        const app = new ALifeTask(width, height);
+        window.app = new ALifeTask(width, height);
         app.domElement.style.width = `${width}px`;
         app.domElement.style.height = `${height}px`;
         document.getElementById('canvasContainer').appendChild(app.domElement);
 
         app.initialize({width, height}).then(() => {
-            app.update(0);
+            
         });
     </script>
 </body>

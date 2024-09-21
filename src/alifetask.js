@@ -1,6 +1,7 @@
 import {
     createTexture,
     createFramebuffer,
+    createShader,
     createProgram,
     getUniformLocations,
 } from "./engine.js";
@@ -31,7 +32,7 @@ export default class ALifeTask {
     #gl;
 
     /**
-     * @type {null | {simulation: Program}}
+     * @type {null | {simulation: Program, render: Program}}
      */
     #programs;
 
@@ -68,15 +69,28 @@ export default class ALifeTask {
         promises.push(Promise.all([
             fetch('shaders/quad.vs').then((response) => response.text()),
             fetch('shaders/simulation.fs').then((response) => response.text()),
-        ]).then(([vs, fs]) => {
-            const simulation = createProgram(gl, { vertexSource: vs, fragmentSource: fs });
+            fetch('shaders/render.fs').then((response) => response.text()),
+        ]).then(([quadVsSrc, simulationFsSrc, renderFsSrc]) => {
+            const quadVs = createShader(gl, { type: 'vertex', source: quadVsSrc });
+            const simulationFs = createShader(gl, { type: 'fragment', source: simulationFsSrc });
+            const renderFs = createShader(gl, { type: 'fragment', source: renderFsSrc });
+
+            const simulation = createProgram(gl, { vertexShader: quadVs, fragmentShader: simulationFs });
+            const render = createProgram(gl, { vertexShader: quadVs, fragmentShader: renderFs });
+
             this.#programs = {
                 simulation: {
                     program: simulation,
                     uniformLocations: getUniformLocations(gl, simulation, [
 
                     ]),
-                }
+                },
+                render: {
+                    program: render,
+                    uniformLocations: getUniformLocations(gl, render, [
+                        'uTexture',
+                    ]),
+                },
             };
         }));
 
@@ -108,9 +122,9 @@ export default class ALifeTask {
     }
 
     /**
-     * @param {number} deltaTimeMs 
+     * 
      */
-    update(deltaTimeMs) {
+    update() {
         if (this.#programs === null) {
             return;
         }
@@ -119,16 +133,33 @@ export default class ALifeTask {
 
         const [readPass, writePass] = this.#pingpong;
 
-        //gl.bindFramebuffer(gl.FRAMEBUFFER, writePass.framebuffer);
-        gl.viewport(0, 0, this.#canvas.width, this.#canvas.height);
+        // Simulation pass
+        {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, writePass.framebuffer);
+            gl.viewport(0, 0, this.#canvas.width, this.#canvas.height);
 
-        gl.useProgram(this.#programs.simulation.program);
-        //gl.uniform1i(this.#uniforms.population, 0);
+            gl.useProgram(this.#programs.simulation.program);
+            //gl.uniform1i(this.#uniforms.population, 0);
 
-        //gl.activeTexture(gl.TEXTURE0 + 0);
-        //gl.bindTexture(gl.TEXTURE_2D, readPass.textures.population);
+            //gl.activeTexture(gl.TEXTURE0 + 0);
+            //gl.bindTexture(gl.TEXTURE_2D, readPass.textures.population);
 
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        }
+
+        // Render pass
+        {
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            gl.viewport(0, 0, this.#canvas.width, this.#canvas.height);
+
+            gl.useProgram(this.#programs.render.program);
+            gl.uniform1i(this.#programs.render.uniformLocations.uTexture, 0);
+
+            gl.activeTexture(gl.TEXTURE0 + 0);
+            gl.bindTexture(gl.TEXTURE_2D, writePass.textures.population);
+
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        }
 
         [this.#pingpong[0], this.#pingpong[1]] = [this.#pingpong[1], this.#pingpong[0]];
     }
