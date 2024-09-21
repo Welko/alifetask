@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "checkJs": true,
+        "strictNullChecks": true,
+        "module": "ESNext",
+        "target": "ES2019",
+    },
+    "include": ["*", "./src/**/*"],
+}
