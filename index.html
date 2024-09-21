@@ -23,13 +23,17 @@
         app.initialize({width, height}).then(() => {
             const mode = 'draw';
             const radius = 5;
-
-            app.domElement.addEventListener('mousedown', (event) => {
+            
+            const brush = (event, action) => {
                 const br = app.domElement.getBoundingClientRect();
                 const x = event.clientX - br.left;
                 const y = event.clientY - br.top;
-                app.brush({ action: 'down', mode, x, y, radius })
-            });
+                app.brush({ action, mode, x, y, radius });
+            };
+
+            app.domElement.addEventListener('mousedown', (e)=>brush(e, 'down'));
+            app.domElement.addEventListener('mousemove', (e)=>brush(e, 'move'));
+            app.domElement.addEventListener('mouseup', (e)=>brush(e, 'up'));
         });
     </script>
 </body>

@@ -17,13 +17,21 @@ void main() {
 
     // Shortest distance from the pixel to the line
     vec2 line = uEnd - uStart;
-    float lineLengthSquared = dot(line, line);
-    vec2 lineDir = lineLengthSquared == 0.0 ? vec2(0.0, 0.0) : line/sqrt(lineLengthSquared);
+    float lineLength = length(line);
+    vec2 lineDir = lineLength == 0.0 ? vec2(0.0, 0.0) : line/lineLength;
     vec2 startToPixel = pixelCoord - uStart;
     float proj = dot(startToPixel, lineDir);
     vec2 projPoint = uStart + proj * lineDir;
     vec2 projPointToPixel = pixelCoord - projPoint;
     float distToLineSquared = dot(projPointToPixel, projPointToPixel);
+
+    // We consider a line segment
+    if (proj < 0.0) {
+        distToLineSquared = dot(startToPixel, startToPixel);
+    } else if (proj > lineLength) {
+        vec2 endToPixel = pixelCoord - uEnd;
+        distToLineSquared = dot(endToPixel, endToPixel);
+    }
 
     if (distToLineSquared < radiusSquared) {
         if (uMode == 0) {
