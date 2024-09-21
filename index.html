@@ -7,7 +7,14 @@
 </head>
 <body>
     <div id="canvasContainer"></div>
-    <button onclick="app.update()">Step</button>
+    <button onclick="step()">Step</button>
+
+    <script>
+        function step() {
+            app.update();
+            app.render();
+        }
+    </script>
 
     <script type="module">
         import ALifeTask from './src/alifetask.js';

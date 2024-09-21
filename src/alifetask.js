@@ -90,20 +90,19 @@ export default class ALifeTask {
                 simulation: {
                     program: simulation,
                     uniformLocations: getUniformLocations(gl, simulation, [
-
+                        'uPopulation',
                     ]),
                 },
                 render: {
                     program: render,
                     uniformLocations: getUniformLocations(gl, render, [
-                        'uTexture',
+                        'uPopulation',
                     ]),
                 },
                 brush: {
                     program: brush,
                     uniformLocations: getUniformLocations(gl, brush, [
-                        'uMode', 'uStart', 'uEnd', 'uRadius',
-                        //'uMode', 'uStart', 'uRadius',
+                        'uPopulation', 'uMode', 'uStart', 'uEnd', 'uRadius',
                     ]),
                 },
             };
@@ -156,10 +155,10 @@ export default class ALifeTask {
         gl.viewport(0, 0, this.#canvas.width, this.#canvas.height);
 
         gl.useProgram(this.#programs.simulation.program);
-        //gl.uniform1i(this.#uniforms.population, 0);
+        gl.uniform1i(this.#programs.simulation.uniformLocations.uPopulation, 0);
 
-        //gl.activeTexture(gl.TEXTURE0 + 0);
-        //gl.bindTexture(gl.TEXTURE_2D, readPass.textures.population);
+        gl.activeTexture(gl.TEXTURE0 + 0);
+        gl.bindTexture(gl.TEXTURE_2D, readPass.textures.population);
 
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
@@ -179,7 +178,7 @@ export default class ALifeTask {
         gl.viewport(0, 0, this.#canvas.width, this.#canvas.height);
 
         gl.useProgram(this.#programs.render.program);
-        gl.uniform1i(this.#programs.render.uniformLocations.uTexture, 0);
+        gl.uniform1i(this.#programs.render.uniformLocations.uPopulation, 0);
 
         gl.activeTexture(gl.TEXTURE0 + 0);
         gl.bindTexture(gl.TEXTURE_2D, readPass.textures.population);
@@ -216,11 +215,11 @@ export default class ALifeTask {
 
         const [readPass, writePass] = this.#pingpong;
 
-        //gl.bindFramebuffer(gl.FRAMEBUFFER, writePass.framebuffer);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, writePass.framebuffer);
         gl.viewport(0, 0, this.#canvas.width, this.#canvas.height);
 
         gl.useProgram(this.#programs.brush.program);
+        gl.uniform1i(this.#programs.brush.uniformLocations.uPopulation, 0);
         gl.uniform1i(this.#programs.brush.uniformLocations.uMode, modeEnum);
         gl.uniform2f(this.#programs.brush.uniformLocations.uStart, startX, startY);
         gl.uniform2f(this.#programs.brush.uniformLocations.uEnd, endX, endY);
@@ -231,9 +230,11 @@ export default class ALifeTask {
 
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-        this.#swap();
-
         this.#brush = params.action === 'up' ? null : {x: endX, y: endY};
+
+        console.log(params.action);
+
+        this.#swap();
     }
 
 }

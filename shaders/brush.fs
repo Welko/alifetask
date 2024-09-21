@@ -6,6 +6,7 @@ in vec2 vUv;
 
 out vec4 outColor;
 
+uniform sampler2D uPopulation;
 uniform int uMode; // 0: draw, 1: erase
 uniform vec2 uStart;
 uniform vec2 uEnd;
@@ -33,27 +34,13 @@ void main() {
         distToLineSquared = dot(endToPixel, endToPixel);
     }
 
+    outColor = texelFetch(uPopulation, ivec2(pixelCoord), 0);
+
     if (distToLineSquared < radiusSquared) {
         if (uMode == 0) {
-            outColor = vec4(1.0, 1.0, 1.0, 1.0);
+            outColor = vec4(0.0, 1.0, 1.0, 1.0);
         } else {
             outColor = vec4(1.0, 0.0, 0.0, 1.0);
         }
-    } else {
-        //discard;
-        outColor = vec4(0.0, 0.0, 1.0, 1.0);
     }
-return;
-    vec2 pixelToStart = pixelCoord - uStart;
-    float distanceToStartSquared = dot(pixelToStart, pixelToStart);
-    if (distanceToStartSquared > radiusSquared) {
-        if (pixelCoord.x > uEnd.x) {
-            outColor = vec4(0.0, 1.0, 0.0, 1.0);
-            return;
-        }
-        outColor = vec4(0.0, 0.0, 1.0, 1.0);
-        return;
-    }
-    outColor = vec4(1.0, 0.0, 0.0, 1.0);
-    return;
 }
