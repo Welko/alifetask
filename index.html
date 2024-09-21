@@ -21,7 +21,15 @@
         document.getElementById('canvasContainer').appendChild(app.domElement);
 
         app.initialize({width, height}).then(() => {
-            
+            const mode = 'draw';
+            const radius = 5;
+
+            app.domElement.addEventListener('mousedown', (event) => {
+                const br = app.domElement.getBoundingClientRect();
+                const x = event.clientX - br.left;
+                const y = event.clientY - br.top;
+                app.brush({ action: 'down', mode, x, y, radius })
+            });
         });
     </script>
 </body>

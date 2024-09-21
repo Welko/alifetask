@@ -32,7 +32,7 @@ export default class ALifeTask {
     #gl;
 
     /**
-     * @type {null | {simulation: Program, render: Program}}
+     * @type {null | {simulation: Program, render: Program, brush: Program}}
      */
     #programs;
 
@@ -70,13 +70,16 @@ export default class ALifeTask {
             fetch('shaders/quad.vs').then((response) => response.text()),
             fetch('shaders/simulation.fs').then((response) => response.text()),
             fetch('shaders/render.fs').then((response) => response.text()),
-        ]).then(([quadVsSrc, simulationFsSrc, renderFsSrc]) => {
+            fetch('shaders/brush.fs').then((response) => response.text()),
+        ]).then(([quadVsSrc, simulationFsSrc, renderFsSrc, brushFsSrc]) => {
             const quadVs = createShader(gl, { type: 'vertex', source: quadVsSrc });
             const simulationFs = createShader(gl, { type: 'fragment', source: simulationFsSrc });
             const renderFs = createShader(gl, { type: 'fragment', source: renderFsSrc });
+            const brushFs = createShader(gl, { type: 'fragment', source: brushFsSrc });
 
             const simulation = createProgram(gl, { vertexShader: quadVs, fragmentShader: simulationFs });
             const render = createProgram(gl, { vertexShader: quadVs, fragmentShader: renderFs });
+            const brush = createProgram(gl, { vertexShader: quadVs, fragmentShader: brushFs });
 
             this.#programs = {
                 simulation: {
@@ -89,6 +92,13 @@ export default class ALifeTask {
                     program: render,
                     uniformLocations: getUniformLocations(gl, render, [
                         'uTexture',
+                    ]),
+                },
+                brush: {
+                    program: brush,
+                    uniformLocations: getUniformLocations(gl, brush, [
+                        'uMode', 'uStart', 'uEnd', 'uRadius',
+                        //'uMode', 'uStart', 'uRadius',
                     ]),
                 },
             };
@@ -119,6 +129,10 @@ export default class ALifeTask {
         });
 
         return Promise.all(promises);
+    }
+
+    #swap() {
+        [this.#pingpong[0], this.#pingpong[1]] = [this.#pingpong[1], this.#pingpong[0]];
     }
 
     /**
@@ -161,7 +175,48 @@ export default class ALifeTask {
             gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
         }
 
-        [this.#pingpong[0], this.#pingpong[1]] = [this.#pingpong[1], this.#pingpong[0]];
+        this.#swap();
+    }
+
+    /**
+     * @typedef BrushParams
+     * @property {'down' | 'move' | 'up'} action
+     * @property {'draw' | 'erase'} mode
+     * @property {number} x
+     * @property {number} y
+     * @property {number} radius
+     * 
+     * @param {BrushParams} params
+     */
+    brush(params) {
+        if (this.#programs === null) {
+            return;
+        }
+
+        const gl = this.#gl;
+
+        const modeEnum = {draw:0, erase:1}[params.mode];
+        const x = params.x;
+        const y = this.#canvas.height - params.y;
+
+        const [readPass, writePass] = this.#pingpong;
+
+        //gl.bindFramebuffer(gl.FRAMEBUFFER, writePass.framebuffer);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, this.#canvas.width, this.#canvas.height);
+
+        gl.useProgram(this.#programs.brush.program);
+        gl.uniform1i(this.#programs.brush.uniformLocations.uMode, modeEnum);
+        gl.uniform2f(this.#programs.brush.uniformLocations.uStart, x, y);
+        gl.uniform2f(this.#programs.brush.uniformLocations.uEnd, x, y);
+        gl.uniform1f(this.#programs.brush.uniformLocations.uRadius, params.radius);
+
+        gl.activeTexture(gl.TEXTURE0 + 0);
+        gl.bindTexture(gl.TEXTURE_2D, readPass.textures.population);
+
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+        this.#swap();
     }
 
 }
