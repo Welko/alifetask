@@ -36,6 +36,7 @@
                 const x = event.clientX - br.left;
                 const y = event.clientY - br.top;
                 app.brush({ action, mode, x, y, radius });
+                app.render();
             };
 
             app.domElement.addEventListener('mousedown', (e)=>brush(e, 'down'));

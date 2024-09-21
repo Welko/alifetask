@@ -139,9 +139,6 @@ export default class ALifeTask {
         [this.#pingpong[0], this.#pingpong[1]] = [this.#pingpong[1], this.#pingpong[0]];
     }
 
-    /**
-     * 
-     */
     update() {
         if (this.#programs === null) {
             return;

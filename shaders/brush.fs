@@ -6,7 +6,10 @@ in vec2 vUv;
 
 out vec4 outColor;
 
+// Data
 uniform sampler2D uPopulation;
+
+// Brush parameters
 uniform int uMode; // 0: draw, 1: erase
 uniform vec2 uStart;
 uniform vec2 uEnd;
@@ -38,9 +41,9 @@ void main() {
 
     if (distToLineSquared < radiusSquared) {
         if (uMode == 0) {
-            outColor = vec4(0.0, 1.0, 1.0, 1.0);
-        } else {
             outColor = vec4(1.0, 0.0, 0.0, 1.0);
+        } else {
+            outColor = vec4(0.0, 0.0, 0.0, 1.0);
         }
     }
 }
