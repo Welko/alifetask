@@ -1,30 +1,36 @@
 #version 300 es
 
 precision highp float;
+precision lowp usampler2D;
 
 in vec2 vUv;
 
-out vec4 outColor;
+out uvec4 outColor;
 
-uniform sampler2D uData0;
+uniform usampler2D uData0;
 
 int byteFromFloat(float f) {
     return int(f * 255.0 + 0.5);
 }
 
-ivec2 zoToDir(float zo) {
-    uint bits = floatBitsToUint(zo);
+ivec2 uintToDir(uint bits) {
+    int direction = int(bits & 0x1u); // 0: horizontal, 1: vertical
+    int sign = int((bits >> 1) & 0x1u) * 2 - 1;
+    int magnitude = int((bits >> 2)); // Range [0, 63]
     return ivec2(
-        bits & 0xFu,
-        bits >> 4u
+        direction == 0 ? sign * magnitude : 0,
+        direction == 1 ? sign * magnitude : 0
     );
 }
 
-float dirToZo(ivec2 dir) {
-    uint bits = 0x00000000u;
-    bits |= uint(dir.x);
-    bits |= uint(dir.y) << 4u;
-    return uintBitsToFloat(bits);
+uint dirToUint(ivec2 dir) {
+    dir = clamp(dir, ivec2(-63, -63), ivec2(63, 63));
+    ivec2 absDir = abs(dir);
+    int direction = absDir.x > absDir.y ? 0 : 1;
+    int sign = int(direction == 0 ? dir.x < 0 : dir.y < 0);
+    int magnitude = direction == 0 ? absDir.x : absDir.y;
+    uint bits = uint(direction) | (uint(sign) << 1) | (uint(magnitude) << 2);
+    return bits;
 }
 
 void main() {
@@ -38,46 +44,47 @@ void main() {
     ivec2 leftPixel = clamp(pixelCoord + ivec2(-1, 0), pixelMin, pixelMax);
     ivec2 rightPixel = clamp(pixelCoord + ivec2(1, 0), pixelMin, pixelMax);
 
-    vec4 data0 = texelFetch(uData0, pixelCoord, 0);
-    vec4 data0Top = texelFetch(uData0, topPixel, 0);
-    vec4 data0Bottom = texelFetch(uData0, bottomPixel, 0);
-    vec4 data0Left = texelFetch(uData0, leftPixel, 0);
-    vec4 data0Right = texelFetch(uData0, rightPixel, 0);
+    uvec4 data0 = texelFetch(uData0, pixelCoord, 0);
+    uvec4 data0Top = texelFetch(uData0, topPixel, 0);
+    uvec4 data0Bottom = texelFetch(uData0, bottomPixel, 0);
+    uvec4 data0Left = texelFetch(uData0, leftPixel, 0);
+    uvec4 data0Right = texelFetch(uData0, rightPixel, 0);
+
+    ivec2 direction = uintToDir(data0.b);
+    ivec2 dirT = uintToDir(data0Top.b);
+    ivec2 dirB = uintToDir(data0Bottom.b);
+    ivec2 dirL = uintToDir(data0Left.b);
+    ivec2 dirR = uintToDir(data0Right.b);
     
-    int population = byteFromFloat(data0.r);
-    int popT = byteFromFloat(data0Top.r);
-    int popB = byteFromFloat(data0Bottom.r);
-    int popL = byteFromFloat(data0Left.r);
-    int popR = byteFromFloat(data0Right.r);
+    uint population = data0.r;
+    // Only consider neighbor populations if they are heading towards us
+    uint popT = data0Top.r;
+    uint popB = data0Bottom.r;
+    uint popL = data0Left.r;
+    uint popR = data0Right.r;
 
-    int faction = byteFromFloat(data0.g);
-    int factionT = byteFromFloat(data0Top.g);
-    int factionB = byteFromFloat(data0Bottom.g);
-    int factionL = byteFromFloat(data0Left.g);
-    int factionR = byteFromFloat(data0Right.g);
-    int factions[5] = int[](faction, factionT, factionB, factionL, factionR);
+    uint faction = data0.g;
+    uint factionT = data0Top.g;
+    uint factionB = data0Bottom.g;
+    uint factionL = data0Left.g;
+    uint factionR = data0Right.g;
+    uint factions[5] = uint[](faction, factionT, factionB, factionL, factionR);
 
-    ivec2 direction = zoToDir(data0.b);
-    ivec2 dirT = zoToDir(data0Top.b);
-    ivec2 dirB = zoToDir(data0Bottom.b);
-    ivec2 dirL = zoToDir(data0Left.b);
-    ivec2 dirR = zoToDir(data0Right.b);
+    uint neighborhood[255];
+    neighborhood[factionT] += popT * uint(dirT.y > 0);
+    neighborhood[factionB] += popB * uint(dirB.y < 0);
+    neighborhood[factionL] += popL * uint(dirL.x < 0);
+    neighborhood[factionR] += popR * uint(dirR.x > 0);
 
-    int neighborhood[255];
-    neighborhood[factionT] += popT * int(dirT.y > 0);
-    neighborhood[factionB] += popB * int(dirB.y < 0);
-    neighborhood[factionL] += popL * int(dirL.x < 0);
-    neighborhood[factionR] += popR * int(dirR.x > 0);
+    uint numNeighbors = neighborhood[factionT] + neighborhood[factionB] + neighborhood[factionL] + neighborhood[factionR];
+    uint numNeighborsHostile = numNeighbors - neighborhood[faction];
 
-    int numNeighbors = neighborhood[factionT] + neighborhood[factionB] + neighborhood[factionL] + neighborhood[factionR];
-    int numNeighborsHostile = numNeighbors - neighborhood[faction];
-
-    // Simulation rules
+    // Population movement
     {
         // Consider reproduction
         // Turned off for now. TODO: Needs food :)
         /*if (faction > 0) {
-            int neighborhoodPopulation = population + numNeighborsFriendly;
+            uint neighborhoodPopulation = population + numNeighborsFriendly;
             if (neighborhoodPopulation > 0) {
                 //population += max(1, neighborhoodPopulation / 5);
                 population += 1;
@@ -90,11 +97,11 @@ void main() {
             population = neighborhood[faction]; // Population: consider incoming friends
 
             // Check neighborhood and determine the winning faction
-            int winner = 0;
-            int maxNeighbors = 0;
+            uint winner = 0u;
+            uint maxNeighbors = 0u;
             for (int i = 0; i < 5; i++) {
-                int f = factions[i];
-                int n = neighborhood[f];
+                uint f = factions[i];
+                uint n = neighborhood[f];
                 if (n > maxNeighbors) {
                     maxNeighbors = n;
                     winner = f;
@@ -104,9 +111,9 @@ void main() {
             if (winner == faction) {
                 // Defensive wins
                 population -= numNeighborsHostile;
-            } else if (winner != -1) {
+            } else if (winner != 0u) {
                 // Offensive wins
-                population = neighborhood[winner] * 2 - numNeighbors - population;
+                population = neighborhood[winner] * 2u - numNeighbors - population;
             }
             
             faction = winner;
@@ -114,20 +121,38 @@ void main() {
 
         // Consider outgoing
         {
-            int outgoing = direction.x + direction.y;
-            //population -= outgoing;
+            uint outgoing = uint(abs(direction.x) + abs(direction.y));
+            population -= outgoing;
         }
     }
 
-    if (population <= 0) {
-        faction = 0;
+    // Update direction
+    {
+        // Enemy neighbors attract
+        if (faction > 0u) {
+            ivec2 enemyAttraction = ivec2(0, 0);
+            //if (factionT != faction && popT > 0) enemyAttraction.y += popT;
+            //if (factionB != faction && popB > 0) enemyAttraction.y -= popB;
+            //if (factionL != faction && popL > 0) enemyAttraction.x -= popL;
+            //if (factionR != faction && popR > 0) enemyAttraction.x += popR;
+            //direction += enemyAttraction;
+
+            direction.x += 1;
+
+            //int a = enemyAttraction.x + enemyAttraction.y;
+            //population += a;
+        }
+    }
+
+    if (population <= 0u) {
+        faction = 0u;
         direction = ivec2(0, 0);
     }
 
-    outColor = vec4(
-        float(population) / 255.0,
-        float(faction) / 255.0,
-        dirToZo(direction),
-        0.0
+    outColor = uvec4(
+        population,//float(population) / 255.0,
+        faction,//float(faction) / 255.0,
+        dirToUint(direction),
+        0u//0.0
     );
 }

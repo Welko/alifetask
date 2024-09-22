@@ -21,9 +21,9 @@ export function createTexture(gl, descriptor) {
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
     const level = 0;
-    const internalFormat = gl.RGBA8;
+    const internalFormat = gl.RGBA8UI;
     const border = 0;
-    const format = gl.RGBA;
+    const format = gl.RGBA_INTEGER;
     const type = gl.UNSIGNED_BYTE;
 
     gl.texImage2D(

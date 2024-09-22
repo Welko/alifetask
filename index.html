@@ -17,10 +17,18 @@
 
     <input type="range" id="speed" min="1" max="100" value="10" oninput="setSpeed(this.value)">
     <label for="speed" id="speedLabel"></label>
+    
+    <br/>
 
+    <label for="faction">Faction</label>
+    <select id="faction" onchange="faction = parseInt(this.value)">
+        <option value="1">1</option>
+        <option value="2">2</option>
+    </select>
 
     <script>
         let speed = document.getElementById('speed').value;
+        let faction = parseInt(document.getElementById('faction').value);
 
         const playButton = document.getElementById('play');
         const speedLabel = document.getElementById('speedLabel');
@@ -71,10 +79,10 @@
         app.initialize({width, height}).then(() => {
             const mode = 'draw';
             const radius = 5;
-            const faction = 1;
             const intensity = 1;
             
             const brush = (event, action) => {
+                console.log(faction);
                 const br = app.domElement.getBoundingClientRect();
                 const x = event.clientX - br.left;
                 const y = event.clientY - br.top;

@@ -228,7 +228,7 @@ export default class ALifeTask {
         gl.uniform2f(this.#programs.brush.uniformLocations.uStart, startX, startY);
         gl.uniform2f(this.#programs.brush.uniformLocations.uEnd, endX, endY);
         gl.uniform1f(this.#programs.brush.uniformLocations.uRadius, params.radius);
-        gl.uniform4fv(this.#programs.brush.uniformLocations.uColor, color);
+        gl.uniform4uiv(this.#programs.brush.uniformLocations.uColor, color);
 
         gl.activeTexture(gl.TEXTURE0 + 0);
         gl.bindTexture(gl.TEXTURE_2D, readPass.textures.data0);

@@ -1,29 +1,32 @@
 #version 300 es
 
 precision highp float;
+precision lowp usampler2D;
 
 in vec2 vUv;
 
 out vec4 outColor;
 
-uniform sampler2D uData0;
+uniform usampler2D uData0;
 
-ivec2 zoToDir(float zo) {
-    uint bits = floatBitsToUint(zo);
+ivec2 uintToDir(uint bits) {
+    int direction = int(bits & 0x1u); // 0: horizontal, 1: vertical
+    int sign = int((bits >> 1) & 0x1u) * 2 - 1;
+    int magnitude = int((bits >> 2)); // Range [0, 63]
     return ivec2(
-        bits & 0xFu,
-        bits >> 4u
+        direction == 0 ? sign * magnitude : 0,
+        direction == 1 ? sign * magnitude : 0
     );
 }
 
 void main() {
-    vec4 data0 = texture(uData0, vUv);
+    uvec4 data0 = texture(uData0, vUv);
 
-    int population = int(data0.r * 255.0);
-    int faction = int(data0.g * 255.0);
+    uint population = data0.r;
+    uint faction = data0.g;
 
     float r = float(population) / 255.0;
-    r = r == 0.0 ? 0.0 : mix(0.1, 1.0, r);
+    r = r == 0.0 ? 0.0 : mix(0.5, 1.0, r);
 
     float g = 0.0;
 
@@ -34,16 +37,16 @@ void main() {
     outColor = vec4(r, g, b, a);
 
     // Debug
-    if (false) {
-        ivec2 dir = zoToDir(data0.b);
-        outColor.g = float(dir.x) * 16.0;
-        outColor.b = float(dir.y) * 16.0;
+    if (true) {
+        ivec2 dir = uintToDir(data0.b);
+        outColor.g = float(dir.x) * 255.0;
+        outColor.b = float(dir.y) * 255.0;
     }
 
     // Catch errors
-    if (population > 0 && faction == 0) {
-        outColor = vec4(1.0, 0.0, 1.0, 1.0);
-    } else if (population == 0 && faction > 0) {
+    if (population > 0u && faction == 0u) {
+        outColor = vec4(1.0, 0.0, 0.0, 1.0);
+    } else if (population == 0u && faction > 0u) {
         outColor = vec4(0.0, 1.0, 0.0, 1.0);
     }
 }

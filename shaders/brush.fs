@@ -1,20 +1,21 @@
 #version 300 es
 
 precision highp float;
+precision lowp usampler2D;
 
 in vec2 vUv;
 
-out vec4 outColor;
+out uvec4 outColor;
 
 // Data
-uniform sampler2D uData0;
+uniform usampler2D uData0;
 
 // Brush parameters
 uniform int uMode; // 0: draw, 1: erase
 uniform vec2 uStart;
 uniform vec2 uEnd;
 uniform float uRadius;
-uniform vec4 uColor;
+uniform uvec4 uColor;
 
 void main() {
     vec2 pixelCoord = gl_FragCoord.xy;
@@ -42,10 +43,10 @@ void main() {
 
     if (distToLineSquared < radiusSquared) {
         if (uMode == 0) {
-            outColor.r += uColor.r / 255.0;
-            outColor.g = uColor.g / 255.0;
+            outColor.r += uColor.r;
+            outColor.g = uColor.g;
         } else {
-            outColor = vec4(0.0, 0.0, 0.0, 1.0);
+            outColor = uvec4(0, 0, 0, 255);
         }
     }
 }
