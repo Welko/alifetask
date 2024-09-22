@@ -7,13 +7,14 @@ in vec2 vUv;
 out vec4 outColor;
 
 // Data
-uniform sampler2D uPopulation;
+uniform sampler2D uData0;
 
 // Brush parameters
 uniform int uMode; // 0: draw, 1: erase
 uniform vec2 uStart;
 uniform vec2 uEnd;
 uniform float uRadius;
+uniform vec4 uColor;
 
 void main() {
     vec2 pixelCoord = gl_FragCoord.xy;
@@ -36,12 +37,13 @@ void main() {
         vec2 endToPixel = pixelCoord - uEnd;
         distToLineSquared = dot(endToPixel, endToPixel);
     }
-
-    outColor = texelFetch(uPopulation, ivec2(pixelCoord), 0);
+    
+    outColor = texelFetch(uData0, ivec2(pixelCoord), 0);
 
     if (distToLineSquared < radiusSquared) {
         if (uMode == 0) {
-            outColor = vec4(1.0, 0.0, 0.0, 1.0);
+            outColor.r += uColor.r / 255.0;
+            outColor.g = uColor.g / 255.0;
         } else {
             outColor = vec4(0.0, 0.0, 0.0, 1.0);
         }

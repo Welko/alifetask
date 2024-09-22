@@ -30,12 +30,14 @@
         app.initialize({width, height}).then(() => {
             const mode = 'draw';
             const radius = 5;
+            const faction = 0;
+            const intensity = 1;
             
             const brush = (event, action) => {
                 const br = app.domElement.getBoundingClientRect();
                 const x = event.clientX - br.left;
                 const y = event.clientY - br.top;
-                app.brush({ action, mode, x, y, radius });
+                app.brush({ action, mode, x, y, radius, faction, intensity });
                 app.render();
             };
 

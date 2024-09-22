@@ -6,58 +6,53 @@ in vec2 vUv;
 
 out vec4 outColor;
 
-uniform sampler2D uPopulation;
+uniform sampler2D uData0;
+
+struct Cell {
+    int population;
+    int faction;
+    int numFriends;
+    int numEnemies;
+};
 
 void main() {
     ivec2 pixelCoord = ivec2(gl_FragCoord.xy);
 
     ivec2 pixelMin = ivec2(0, 0);
-    ivec2 pixelMax = textureSize(uPopulation, 0);
+    ivec2 pixelMax = textureSize(uData0, 0);
 
     ivec2 topPixel = clamp(pixelCoord + ivec2(0, 1), pixelMin, pixelMax);
     ivec2 bottomPixel = clamp(pixelCoord + ivec2(0, -1), pixelMin, pixelMax);
     ivec2 leftPixel = clamp(pixelCoord + ivec2(-1, 0), pixelMin, pixelMax);
     ivec2 rightPixel = clamp(pixelCoord + ivec2(1, 0), pixelMin, pixelMax);
 
-    vec4 population = texelFetch(uPopulation, pixelCoord, 0);
-    vec4 populationTop = texelFetch(uPopulation, topPixel, 0);
-    vec4 populationBottom = texelFetch(uPopulation, bottomPixel, 0);
-    vec4 populationLeft = texelFetch(uPopulation, leftPixel, 0);
-    vec4 populationRight = texelFetch(uPopulation, rightPixel, 0);
+    vec4 data0 = texelFetch(uData0, pixelCoord, 0);
+    vec4 data0Top = texelFetch(uData0, topPixel, 0);
+    vec4 data0Bottom = texelFetch(uData0, bottomPixel, 0);
+    vec4 data0Left = texelFetch(uData0, leftPixel, 0);
+    vec4 data0Right = texelFetch(uData0, rightPixel, 0);
+    
+    int population = int(data0.r * 255.0);
+    int popT = int(data0Top.r * 255.0);
+    int popB = int(data0Bottom.r * 255.0);
+    int popL = int(data0Left.r * 255.0);
+    int popR = int(data0Right.r * 255.0);
 
-    // Conway's Game of Life rules
+    Cell cell = Cell(population, 0, popT + popB + popL + popR, 0);
+
+    // Simulation rules
     {
-        bool isAlive = population.r > 0.0;
-        int numLiveNeighbors = int(populationTop.r + populationBottom.r + populationLeft.r + populationRight.r);
-
-        if (isAlive) {
-            // Rule 1: Any live cell with fewer than two live neighbours dies, as if by underpopulation.
-            if (numLiveNeighbors < 2) {
-                outColor = vec4(0.0, 0.0, 0.0, 1.0);
-                return;
-            }
-
-            // Rule 2: Any live cell with two or three live neighbours lives on to the next generation.
-            if (numLiveNeighbors == 2 || numLiveNeighbors == 3) {
-                outColor = vec4(1.0, 0.0, 0.0, 1.0);
-                return;
-            }
-
-            // Rule 3: Any live cell with more than three live neighbours dies, as if by overpopulation.
-            if (numLiveNeighbors > 3) {
-                outColor = vec4(0.0, 0.0, 0.0, 1.0);
-                return;
-            }
+        if (cell.population == 0) {
+            
         } else {
-            // Rule 4: Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
-            if (numLiveNeighbors == 3) {
-                outColor = vec4(1.0, 0.0, 0.0, 1.0);
-                return;
-            }
+            population = 0;
         }
     }
 
-    //outColor = texture(uPopulation, vUv);
-    //outColor = vec4(vUv, 0.0, 1.0);
-    //outColor = vec4(1.0, 0.0, 0.0, 1.0);
+    outColor = vec4(
+        float(cell.population) / 255.0,
+        0.0,
+        0.0,
+        0.0
+    );
 }

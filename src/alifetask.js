@@ -8,7 +8,7 @@ import {
 
 /**
  * @typedef PassTextures
- * @property {WebGLTexture} population
+ * @property {WebGLTexture} data0
  * 
  * @typedef Pass
  * @property {PassTextures} textures
@@ -90,19 +90,19 @@ export default class ALifeTask {
                 simulation: {
                     program: simulation,
                     uniformLocations: getUniformLocations(gl, simulation, [
-                        'uPopulation',
+                        'uData0',
                     ]),
                 },
                 render: {
                     program: render,
                     uniformLocations: getUniformLocations(gl, render, [
-                        'uPopulation',
+                        'uData0',
                     ]),
                 },
                 brush: {
                     program: brush,
                     uniformLocations: getUniformLocations(gl, brush, [
-                        'uPopulation', 'uMode', 'uStart', 'uEnd', 'uRadius',
+                        'uData0', 'uMode', 'uStart', 'uEnd', 'uRadius', 'uColor'
                     ]),
                 },
             };
@@ -133,7 +133,7 @@ export default class ALifeTask {
              */
             const pass = {
                 textures: {
-                    population: populationTexture,
+                    data0: populationTexture,
                 },
                 framebuffer,
             };
@@ -164,7 +164,7 @@ export default class ALifeTask {
         gl.uniform1i(this.#programs.simulation.uniformLocations.uPopulation, 0);
 
         gl.activeTexture(gl.TEXTURE0 + 0);
-        gl.bindTexture(gl.TEXTURE_2D, readPass.textures.population);
+        gl.bindTexture(gl.TEXTURE_2D, readPass.textures.data0);
 
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
@@ -187,7 +187,7 @@ export default class ALifeTask {
         gl.uniform1i(this.#programs.render.uniformLocations.uPopulation, 0);
 
         gl.activeTexture(gl.TEXTURE0 + 0);
-        gl.bindTexture(gl.TEXTURE_2D, readPass.textures.population);
+        gl.bindTexture(gl.TEXTURE_2D, readPass.textures.data0);
 
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
@@ -199,6 +199,8 @@ export default class ALifeTask {
      * @property {number} x
      * @property {number} y
      * @property {number} radius
+     * @property {number} faction Range [0-255] - ignored if mode is 'erase'
+     * @property {number} intensity Range [1-255] - ignored if mode is 'erase'
      * 
      * @param {BrushParams} params
      */
@@ -218,6 +220,7 @@ export default class ALifeTask {
         const endY = this.#canvas.height - params.y;
         const startX = this.#brush?.x ?? endX;
         const startY = this.#brush?.y ?? endY;
+        const color = [params.intensity, params.faction, 0, 0];
 
         const [readPass, writePass] = this.#pingpong;
 
@@ -230,9 +233,10 @@ export default class ALifeTask {
         gl.uniform2f(this.#programs.brush.uniformLocations.uStart, startX, startY);
         gl.uniform2f(this.#programs.brush.uniformLocations.uEnd, endX, endY);
         gl.uniform1f(this.#programs.brush.uniformLocations.uRadius, params.radius);
+        gl.uniform4fv(this.#programs.brush.uniformLocations.uColor, color);
 
         gl.activeTexture(gl.TEXTURE0 + 0);
-        gl.bindTexture(gl.TEXTURE_2D, readPass.textures.population);
+        gl.bindTexture(gl.TEXTURE_2D, readPass.textures.data0);
 
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
