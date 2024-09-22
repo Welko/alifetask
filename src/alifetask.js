@@ -109,13 +109,8 @@ export default class ALifeTask {
         }));
 
         this.#pingpong = /** @type {[Pass, Pass]} */ ([undefined, undefined].map(() => {
+            // All zeros
             const initialTextureData = new Uint8Array(width * height * 4);
-            for (let i = 0; i < initialTextureData.length; i += 4) {
-                //initialTextureData[i + 0] = Math.random() * 255;
-                //initialTextureData[i + 1] = Math.random() * 255;
-                //initialTextureData[i + 2] = Math.random() * 255;
-                initialTextureData[i + 3] = 255;
-            }
 
             gl.activeTexture(gl.TEXTURE0 + 0);
             const populationTexture = createTexture(gl, {

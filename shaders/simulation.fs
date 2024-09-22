@@ -8,6 +8,25 @@ out vec4 outColor;
 
 uniform sampler2D uData0;
 
+int byteFromFloat(float f) {
+    return int(f * 255.0 + 0.5);
+}
+
+ivec2 zoToDir(float zo) {
+    uint bits = floatBitsToUint(zo);
+    return ivec2(
+        bits & 0xFu,
+        bits >> 4u
+    );
+}
+
+float dirToZo(ivec2 dir) {
+    uint bits = 0x00000000u;
+    bits |= uint(dir.x);
+    bits |= uint(dir.y) << 4u;
+    return uintBitsToFloat(bits);
+}
+
 void main() {
     ivec2 pixelCoord = ivec2(gl_FragCoord.xy);
 
@@ -25,50 +44,55 @@ void main() {
     vec4 data0Left = texelFetch(uData0, leftPixel, 0);
     vec4 data0Right = texelFetch(uData0, rightPixel, 0);
     
-    int population = int(data0.r * 255.0);
-    int popT = int(data0Top.r * 255.0);
-    int popB = int(data0Bottom.r * 255.0);
-    int popL = int(data0Left.r * 255.0);
-    int popR = int(data0Right.r * 255.0);
+    int population = byteFromFloat(data0.r);
+    int popT = byteFromFloat(data0Top.r);
+    int popB = byteFromFloat(data0Bottom.r);
+    int popL = byteFromFloat(data0Left.r);
+    int popR = byteFromFloat(data0Right.r);
 
-    int faction = int(data0.g * 255.0);
-    int factionT = int(data0Top.g * 255.0);
-    int factionB = int(data0Bottom.g * 255.0);
-    int factionL = int(data0Left.g * 255.0);
-    int factionR = int(data0Right.g * 255.0);
-    int factions[4] = int[](factionT, factionB, factionL, factionR);
+    int faction = byteFromFloat(data0.g);
+    int factionT = byteFromFloat(data0Top.g);
+    int factionB = byteFromFloat(data0Bottom.g);
+    int factionL = byteFromFloat(data0Left.g);
+    int factionR = byteFromFloat(data0Right.g);
+    int factions[5] = int[](faction, factionT, factionB, factionL, factionR);
+
+    ivec2 direction = zoToDir(data0.b);
+    ivec2 dirT = zoToDir(data0Top.b);
+    ivec2 dirB = zoToDir(data0Bottom.b);
+    ivec2 dirL = zoToDir(data0Left.b);
+    ivec2 dirR = zoToDir(data0Right.b);
 
     int neighborhood[255];
-    neighborhood[factionT] += popT;
-    neighborhood[factionB] += popB;
-    neighborhood[factionL] += popL;
-    neighborhood[factionR] += popR;
+    neighborhood[factionT] += popT * int(dirT.y > 0);
+    neighborhood[factionB] += popB * int(dirB.y < 0);
+    neighborhood[factionL] += popL * int(dirL.x < 0);
+    neighborhood[factionR] += popR * int(dirR.x > 0);
 
-    int numNeighbors = popT + popB + popL + popR;
-    int numNeighborsFriendly = neighborhood[faction];
-    int numNeighborsHostile = numNeighbors - numNeighborsFriendly;
-
-    // Now consider the defending faction
-    int defenseBoost = population;
-    neighborhood[faction] += population;
+    int numNeighbors = neighborhood[factionT] + neighborhood[factionB] + neighborhood[factionL] + neighborhood[factionR];
+    int numNeighborsHostile = numNeighbors - neighborhood[faction];
 
     // Simulation rules
     {
         // Consider reproduction
-        if (faction > 0) {
+        // Turned off for now. TODO: Needs food :)
+        /*if (faction > 0) {
             int neighborhoodPopulation = population + numNeighborsFriendly;
             if (neighborhoodPopulation > 0) {
                 //population += max(1, neighborhoodPopulation / 5);
                 population += 1;
             }
-        }
+        }*/
 
-        // Consider conflict between factions
+        // Consider incoming
         {
+            neighborhood[faction] += population;
+            population = neighborhood[faction]; // Population: consider incoming friends
+
             // Check neighborhood and determine the winning faction
-            int winner = -1;
+            int winner = 0;
             int maxNeighbors = 0;
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 5; i++) {
                 int f = factions[i];
                 int n = neighborhood[f];
                 if (n > maxNeighbors) {
@@ -79,20 +103,31 @@ void main() {
 
             if (winner == faction) {
                 // Defensive wins
-                population = max(1, population - numNeighborsHostile);
+                population -= numNeighborsHostile;
             } else if (winner != -1) {
                 // Offensive wins
-                population = 1;
+                population = neighborhood[winner] * 2 - numNeighbors - population;
             }
             
             faction = winner;
         }
+
+        // Consider outgoing
+        {
+            int outgoing = direction.x + direction.y;
+            //population -= outgoing;
+        }
+    }
+
+    if (population <= 0) {
+        faction = 0;
+        direction = ivec2(0, 0);
     }
 
     outColor = vec4(
         float(population) / 255.0,
         float(faction) / 255.0,
-        0.0,
+        dirToZo(direction),
         0.0
     );
 }
