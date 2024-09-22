@@ -199,7 +199,7 @@ export default class ALifeTask {
      * @property {number} x
      * @property {number} y
      * @property {number} radius
-     * @property {number} faction Range [0-255] - ignored if mode is 'erase'
+     * @property {number} faction Range [1-255] - ignored if mode is 'erase'
      * @property {number} intensity Range [1-255] - ignored if mode is 'erase'
      * 
      * @param {BrushParams} params
