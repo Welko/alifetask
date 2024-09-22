@@ -14,9 +14,9 @@ int byteFromFloat(float f) {
 }
 
 ivec2 uintToDir(uint bits) {
-    int direction = int(bits & 0x1u); // 0: horizontal, 1: vertical
-    int sign = int((bits >> 1) & 0x1u) * 2 - 1;
-    int magnitude = int((bits >> 2)); // Range [0, 63]
+    int direction = int(bits & 1u); // 0: horizontal, 1: vertical
+    int sign = int((bits >> 1u) & 1u) * 2 - 1;
+    int magnitude = int((bits >> 2u)); // Range [0, 63]
     return ivec2(
         direction == 0 ? sign * magnitude : 0,
         direction == 1 ? sign * magnitude : 0
@@ -24,10 +24,9 @@ ivec2 uintToDir(uint bits) {
 }
 
 uint dirToUint(ivec2 dir) {
-    dir = clamp(dir, ivec2(-63, -63), ivec2(63, 63));
     ivec2 absDir = abs(dir);
     int direction = absDir.x > absDir.y ? 0 : 1;
-    int sign = int(direction == 0 ? dir.x < 0 : dir.y < 0);
+    int sign = int(direction == 0 ? dir.x >= 0 : dir.y >= 0);
     int magnitude = direction == 0 ? absDir.x : absDir.y;
     uint bits = uint(direction) | (uint(sign) << 1) | (uint(magnitude) << 2);
     return bits;
@@ -37,7 +36,7 @@ void main() {
     ivec2 pixelCoord = ivec2(gl_FragCoord.xy);
 
     ivec2 pixelMin = ivec2(0, 0);
-    ivec2 pixelMax = textureSize(uData0, 0);
+    ivec2 pixelMax = textureSize(uData0, 0) - ivec2(1, 1);
 
     ivec2 topPixel = clamp(pixelCoord + ivec2(0, 1), pixelMin, pixelMax);
     ivec2 bottomPixel = clamp(pixelCoord + ivec2(0, -1), pixelMin, pixelMax);
@@ -71,16 +70,16 @@ void main() {
     uint factions[5] = uint[](faction, factionT, factionB, factionL, factionR);
 
     uint neighborhood[255];
-    neighborhood[factionT] += popT * uint(dirT.y > 0);
-    neighborhood[factionB] += popB * uint(dirB.y < 0);
-    neighborhood[factionL] += popL * uint(dirL.x < 0);
-    neighborhood[factionR] += popR * uint(dirR.x > 0);
+    neighborhood[factionT] += popT * uint(dirT.y < 0);
+    neighborhood[factionB] += popB * uint(dirB.y > 0);
+    neighborhood[factionL] += popL * uint(dirL.x > 0);
+    neighborhood[factionR] += popR * uint(dirR.x < 0);
 
     uint numNeighbors = neighborhood[factionT] + neighborhood[factionB] + neighborhood[factionL] + neighborhood[factionR];
     uint numNeighborsHostile = numNeighbors - neighborhood[faction];
 
     // Population movement
-    {
+    if(false) {
         // Consider reproduction
         // Turned off for now. TODO: Needs food :)
         /*if (faction > 0) {
@@ -129,19 +128,30 @@ void main() {
     // Update direction
     {
         // Enemy neighbors attract
+        ivec2 enemyAttraction = ivec2(0, 0);
         if (faction > 0u) {
-            ivec2 enemyAttraction = ivec2(0, 0);
-            //if (factionT != faction && popT > 0) enemyAttraction.y += popT;
-            //if (factionB != faction && popB > 0) enemyAttraction.y -= popB;
-            //if (factionL != faction && popL > 0) enemyAttraction.x -= popL;
-            //if (factionR != faction && popR > 0) enemyAttraction.x += popR;
-            //direction += enemyAttraction;
-
-            direction.x += 1;
-
-            //int a = enemyAttraction.x + enemyAttraction.y;
-            //population += a;
+            if (factionT != faction && popT > 0u) enemyAttraction.y += int(popT);
+            if (factionB != faction && popB > 0u) enemyAttraction.y -= int(popB);
+            if (factionL != faction && popL > 0u) enemyAttraction.x -= int(popL);
+            if (factionR != faction && popR > 0u) enemyAttraction.x += int(popR);
         }
+
+        // Friends follow friends
+        ivec2 friendAttraction = ivec2(0, 0);
+        if (faction > 0u) {
+            if (factionT == faction && (dirT.x != 0 || dirT.y != 0)) friendAttraction += ivec2(0, 1) * int(popT);
+            if (factionB == faction && (dirB.x != 0 || dirB.y != 0)) friendAttraction += ivec2(0, -1) * int(popB);
+            if (factionL == faction && (dirL.x != 0 || dirL.y != 0)) friendAttraction += ivec2(-1, 0) * int(popL);
+            if (factionR == faction && (dirR.x != 0 || dirR.y != 0)) friendAttraction += ivec2(1, 0) * int(popR);
+        }
+
+        ivec2 attraction = 2 * sign(enemyAttraction) + sign(friendAttraction);
+        bool isHorizontal = abs(attraction.x) > abs(attraction.y);
+        attraction = ivec2(
+            isHorizontal ? attraction.x : 0,
+            isHorizontal ? 0 : attraction.y
+        );
+        direction = attraction;
     }
 
     if (population <= 0u) {
@@ -150,9 +160,9 @@ void main() {
     }
 
     outColor = uvec4(
-        population,//float(population) / 255.0,
-        faction,//float(faction) / 255.0,
+        population,
+        faction,
         dirToUint(direction),
-        0u//0.0
+        0u
     );
 }

@@ -25,13 +25,20 @@
         <option value="1">1</option>
         <option value="2">2</option>
     </select>
+    
+    <br/>
+
+    <input type="range" id="intensity" min="1" max="255" value="1" oninput="setIntensity(this.value)">
+    <label for="intensity" id="intensityLabel"></label>
 
     <script>
         let speed = document.getElementById('speed').value;
         let faction = parseInt(document.getElementById('faction').value);
+        let intensity = parseInt(document.getElementById('intensity').value);
 
         const playButton = document.getElementById('play');
         const speedLabel = document.getElementById('speedLabel');
+        const intensityLabel = document.getElementById('intensityLabel');
 
         let interval = null;
 
@@ -63,6 +70,11 @@
         }
         setSpeed(speed);
 
+        function setIntensity(value) {
+            intensity = value;
+            intensityLabel.innerText = `Intensity: ${intensity}`;
+        }
+        setIntensity(intensity);
     </script>
 
     <script type="module">
@@ -79,7 +91,6 @@
         app.initialize({width, height}).then(() => {
             const mode = 'draw';
             const radius = 5;
-            const intensity = 1;
             
             const brush = (event, action) => {
                 console.log(faction);

@@ -43,10 +43,9 @@ void main() {
 
     if (distToLineSquared < radiusSquared) {
         if (uMode == 0) {
-            outColor.r += uColor.r;
-            outColor.g = uColor.g;
+            outColor = uColor;
         } else {
-            outColor = uvec4(0, 0, 0, 255);
+            outColor = uvec4(0, 0, 0, 0);
         }
     }
 }
