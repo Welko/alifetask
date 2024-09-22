@@ -7,13 +7,54 @@
 </head>
 <body>
     <div id="canvasContainer"></div>
+
+    <br/>
+
     <button onclick="step()">Step</button>
+    <button id="play" onclick="play()">Play</button>
+
+    <br/>
+
+    <input type="range" id="speed" min="1" max="100" value="10" oninput="setSpeed(this.value)">
+    <label for="speed" id="speedLabel"></label>
+
 
     <script>
+        let speed = document.getElementById('speed').value;
+
+        const playButton = document.getElementById('play');
+        const speedLabel = document.getElementById('speedLabel');
+
+        let interval = null;
+
         function step() {
             app.update();
             app.render();
         }
+
+        function play() {
+            if (interval) {
+                clearInterval(interval);
+                interval = null;
+            } else {
+                interval = setInterval(() => {
+                    app.update();
+                    app.render();
+                }, speed / 60);
+            }
+            playButton.innerText = interval ? 'Pause' : 'Play';
+        }
+
+        function setSpeed(value) {
+            speed = value;
+            speedLabel.innerText = `${speed} steps per second`;
+            if (interval) {
+                clearInterval(interval);
+                play();
+            }
+        }
+        setSpeed(speed);
+
     </script>
 
     <script type="module">
