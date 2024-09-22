@@ -25,31 +25,32 @@ void main() {
     vec4 populationLeft = texelFetch(uPopulation, leftPixel, 0);
     vec4 populationRight = texelFetch(uPopulation, rightPixel, 0);
 
-    bool isAlive = population.r > 0.0;
-
     // Conway's Game of Life rules
     {
+        bool isAlive = population.r > 0.0;
+        int numLiveNeighbors = int(populationTop.r + populationBottom.r + populationLeft.r + populationRight.r);
+
         if (isAlive) {
             // Rule 1: Any live cell with fewer than two live neighbours dies, as if by underpopulation.
-            if (populationTop.r + populationBottom.r + populationLeft.r + populationRight.r < 2.0) {
+            if (numLiveNeighbors < 2) {
                 outColor = vec4(0.0, 0.0, 0.0, 1.0);
                 return;
             }
 
             // Rule 2: Any live cell with two or three live neighbours lives on to the next generation.
-            if (populationTop.r + populationBottom.r + populationLeft.r + populationRight.r == 2.0) {
+            if (numLiveNeighbors == 2 || numLiveNeighbors == 3) {
                 outColor = vec4(1.0, 0.0, 0.0, 1.0);
                 return;
             }
 
             // Rule 3: Any live cell with more than three live neighbours dies, as if by overpopulation.
-            if (populationTop.r + populationBottom.r + populationLeft.r + populationRight.r > 3.0) {
+            if (numLiveNeighbors > 3) {
                 outColor = vec4(0.0, 0.0, 0.0, 1.0);
                 return;
             }
         } else {
             // Rule 4: Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
-            if (populationTop.r + populationBottom.r + populationLeft.r + populationRight.r == 3.0) {
+            if (numLiveNeighbors == 3) {
                 outColor = vec4(1.0, 0.0, 0.0, 1.0);
                 return;
             }

@@ -2,7 +2,7 @@
  * @typedef TextureDescriptor
  * @property {number} width
  * @property {number} height
- * @property {ArrayBufferView} [data]
+ * @property {ArrayBufferView} data
  * 
  * @param {WebGL2RenderingContext} gl 
  * @param {TextureDescriptor} descriptor
@@ -12,6 +12,10 @@ export function createTexture(gl, descriptor) {
     const texture = gl.createTexture();
     if (texture === null) {
         throw new Error('Could not create texture');
+    }
+
+    if (descriptor.data.byteLength !== descriptor.width * descriptor.height * 4) {
+        throw new Error('Data length does not match width and height');
     }
 
     gl.bindTexture(gl.TEXTURE_2D, texture);

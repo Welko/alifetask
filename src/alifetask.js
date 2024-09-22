@@ -109,14 +109,23 @@ export default class ALifeTask {
         }));
 
         this.#pingpong = /** @type {[Pass, Pass]} */ ([undefined, undefined].map(() => {
+            const initialTextureData = new Uint8Array(width * height * 4);
+            for (let i = 0; i < initialTextureData.length; i += 4) {
+                //initialTextureData[i + 0] = Math.random() * 255;
+                //initialTextureData[i + 1] = Math.random() * 255;
+                //initialTextureData[i + 2] = Math.random() * 255;
+                initialTextureData[i + 3] = 255;
+            }
+
             gl.activeTexture(gl.TEXTURE0 + 0);
-            const population = createTexture(gl, {
+            const populationTexture = createTexture(gl, {
                 width,
                 height,
+                data: initialTextureData,
             });
 
             const framebuffer = createFramebuffer(gl, {
-                colorAttachment0: population,
+                colorAttachment0: populationTexture,
             });
 
             /**
@@ -124,7 +133,7 @@ export default class ALifeTask {
              */
             const pass = {
                 textures: {
-                    population,
+                    population: populationTexture,
                 },
                 framebuffer,
             };
@@ -169,7 +178,7 @@ export default class ALifeTask {
 
         const gl = this.#gl;
 
-        const [readPass, writePass] = this.#pingpong;
+        const [readPass] = this.#pingpong;
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.viewport(0, 0, this.#canvas.width, this.#canvas.height);
@@ -228,8 +237,6 @@ export default class ALifeTask {
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
         this.#brush = params.action === 'up' ? null : {x: endX, y: endY};
-
-        console.log(params.action);
 
         this.#swap();
     }
