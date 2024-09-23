@@ -28,7 +28,7 @@
     
     <br/>
 
-    <input type="range" id="intensity" min="1" max="65535" value="65535" oninput="setIntensity(this.value)">
+    <input type="range" id="intensity" min="0" max="65535" value="65535" oninput="setIntensity(this.value)">
     <label for="intensity" id="intensityLabel"></label>
     
     <br/>
@@ -39,12 +39,36 @@
         <option value="random">Random</option>
     </select>
     <button onclick="fill()">Fill</button>
+    
+    <br/>
+
+    <label for="feedRate">Feed rate</label>
+    <input type="number" id="feedRate" value="0.035" oninput="updateParams()">
+    <br/>
+    <label for="killRate">Kill rate</label>
+    <input type="number" id="killRate" value="0.065" oninput="updateParams()">
+    <br/>
+    <label for="diffusionRateU">Diffusion rate U</label>
+    <input type="number" id="diffusionRateU" value="0.16" oninput="updateParams()">
+    <br/>
+    <label for="diffusionRateV">Diffusion rate V</label>
+    <input type="number" id="diffusionRateV" value="0.08" oninput="updateParams()">
+    <br/>
+    <label for="deltaTimeMs">Delta time (ms)</label>
+    <input type="number" id="deltaTimeMs" value="0.5" oninput="updateParams()">
 
     <script>
         let speed = document.getElementById('speed').value;
         let channel = document.getElementById('channel').value;
         let intensity = parseInt(document.getElementById('intensity').value);
         let fillMode = document.getElementById('fillMode').value;
+        let params = {
+            feedRate: parseFloat(document.getElementById('feedRate').value),
+            killRate: parseFloat(document.getElementById('killRate').value),
+            diffusionRateU: parseFloat(document.getElementById('diffusionRateU').value),
+            diffusionRateV: parseFloat(document.getElementById('diffusionRateV').value),
+            deltaTimeMs: parseFloat(document.getElementById('deltaTimeMs').value),
+        };
 
         const playButton = document.getElementById('play');
         const speedLabel = document.getElementById('speedLabel');
@@ -91,6 +115,17 @@
             intensityLabel.innerText = `Intensity: ${intensity}`;
         }
         setIntensity(intensity);
+
+        function updateParams() {
+            params = {
+                feedRate: parseFloat(document.getElementById('feedRate').value),
+                killRate: parseFloat(document.getElementById('killRate').value),
+                diffusionRateU: parseFloat(document.getElementById('diffusionRateU').value),
+                diffusionRateV: parseFloat(document.getElementById('diffusionRateV').value),
+                deltaTimeMs: parseFloat(document.getElementById('deltaTimeMs').value),
+            };
+            app.params = params;
+        }
     </script>
 
     <script type="module">
@@ -99,7 +134,7 @@
         const width = 512;
         const height = 512;
 
-        window.app = new ALifeTask(width, height);
+        window.app = new ALifeTask(params);
         app.domElement.style.width = `${width}px`;
         app.domElement.style.height = `${height}px`;
         document.getElementById('canvasContainer').appendChild(app.domElement);

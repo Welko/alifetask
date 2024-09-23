@@ -17,9 +17,27 @@ import {
  * @typedef Program
  * @property {WebGLProgram} program
  * @property {{[uniformName: string]: WebGLUniformLocation}} uniformLocations
+ * 
+ * @typedef SimulationParams
+ * @property {number} feedRate
+ * @property {number} killRate
+ * @property {number} diffusionRateU
+ * @property {number} diffusionRateV
+ * @property {number} deltaTimeMs
  */
 
 export default class ALifeTask {
+
+    /**
+     * @type {SimulationParams}
+     */
+    #params = {
+        feedRate: 0.035,
+        killRate: 0.065,
+        diffusionRateU: 0.16,
+        diffusionRateV: 0.08,
+        deltaTimeMs: 0.5,
+    };
     
     /**
      * @type {HTMLCanvasElement}
@@ -46,7 +64,12 @@ export default class ALifeTask {
      */
     #brush = null;
 
-    constructor() {
+    /**
+     * 
+     * @param {SimulationParams} params 
+     */
+    constructor(params) {
+        this.#params = params;
         this.#canvas = document.createElement('canvas');
 
         const gl = this.#canvas.getContext('webgl2');
@@ -58,6 +81,13 @@ export default class ALifeTask {
 
     get domElement() {
         return this.#canvas;
+    }
+
+    /**
+     * @param {Partial<SimulationParams>} params
+     */
+    set params(params) {
+        this.#params = {...this.#params, ...params};
     }
 
     /**
@@ -90,7 +120,7 @@ export default class ALifeTask {
                 simulation: {
                     program: simulation,
                     uniformLocations: getUniformLocations(gl, simulation, [
-                        'uData0',
+                        'uData0', 'uFeedRate', 'uKillRate', 'uDiffusionRateU', 'uDiffusionRateV', 'uDeltaTimeMs'
                     ]),
                 },
                 render: {
@@ -107,7 +137,7 @@ export default class ALifeTask {
                 },
             };
         }));
-
+        
         this.#pingpong = /** @type {[Pass, Pass]} */ ([undefined, undefined].map(() => {
             // All zeros
             const numChannels = 4;
@@ -157,7 +187,12 @@ export default class ALifeTask {
         gl.viewport(0, 0, this.#canvas.width, this.#canvas.height);
 
         gl.useProgram(this.#programs.simulation.program);
-        gl.uniform1i(this.#programs.simulation.uniformLocations.uPopulation, 0);
+        gl.uniform1i(this.#programs.simulation.uniformLocations.uData0, 0);
+        gl.uniform1f(this.#programs.simulation.uniformLocations.uFeedRate, this.#params.feedRate);
+        gl.uniform1f(this.#programs.simulation.uniformLocations.uKillRate, this.#params.killRate);
+        gl.uniform1f(this.#programs.simulation.uniformLocations.uDiffusionRateU, this.#params.diffusionRateU);
+        gl.uniform1f(this.#programs.simulation.uniformLocations.uDiffusionRateV, this.#params.diffusionRateV);
+        gl.uniform1f(this.#programs.simulation.uniformLocations.uDeltaTimeMs, this.#params.deltaTimeMs);
 
         gl.activeTexture(gl.TEXTURE0 + 0);
         gl.bindTexture(gl.TEXTURE_2D, readPass.textures.data0);
@@ -180,7 +215,7 @@ export default class ALifeTask {
         gl.viewport(0, 0, this.#canvas.width, this.#canvas.height);
 
         gl.useProgram(this.#programs.render.program);
-        gl.uniform1i(this.#programs.render.uniformLocations.uPopulation, 0);
+        gl.uniform1i(this.#programs.render.uniformLocations.uData0, 0);
 
         gl.activeTexture(gl.TEXTURE0 + 0);
         gl.bindTexture(gl.TEXTURE_2D, readPass.textures.data0);
@@ -230,7 +265,7 @@ export default class ALifeTask {
         gl.viewport(0, 0, this.#canvas.width, this.#canvas.height);
 
         gl.useProgram(this.#programs.brush.program);
-        gl.uniform1i(this.#programs.brush.uniformLocations.uPopulation, 0);
+        gl.uniform1i(this.#programs.brush.uniformLocations.uData0, 0);
         gl.uniform1i(this.#programs.brush.uniformLocations.uMode, modeEnum);
         gl.uniform2f(this.#programs.brush.uniformLocations.uStart, startX, startY);
         gl.uniform2f(this.#programs.brush.uniformLocations.uEnd, endX, endY);

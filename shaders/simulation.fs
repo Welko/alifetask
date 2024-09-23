@@ -9,11 +9,11 @@ out uvec4 outColor;
 
 uniform usampler2D uData0;
 
-/*uniform*/ float feedRate = 0.035;
-/*uniform*/ float killRate = 0.065;
-/*uniform*/ float diffusionRateU = 0.16;
-/*uniform*/ float diffusionRateV = 0.08;
-/*uniform*/ float deltaTimeMs = 0.5;
+uniform float uFeedRate;
+uniform float uKillRate;
+uniform float uDiffusionRateU;
+uniform float uDiffusionRateV;
+uniform float uDeltaTimeMs;
 
 vec2 laplacian(uvec2 c, ivec2 pixelCoord) {
     ivec2 pixelMin = ivec2(0, 0);
@@ -72,12 +72,12 @@ void main() {
     
         // Gray-Scott equations
         float uvv = U * V * V;
-        float dU = diffusionRateU * lap.x - uvv + feedRate * (1.0 - U);
-        float dV = diffusionRateV * lap.y + uvv - (feedRate + killRate) * V;
+        float dU = uDiffusionRateU * lap.x - uvv + uFeedRate * (1.0 - U);
+        float dV = uDiffusionRateV * lap.y + uvv - (uFeedRate + uKillRate) * V;
 
         // Update U and V with time step
-        U += dU * deltaTimeMs;
-        V += dV * deltaTimeMs;
+        U += dU * uDeltaTimeMs;
+        V += dV * uDeltaTimeMs;
 
         outColor = uvec4(vec4(U, V, 0.0, 0.0) * 65535.0);
         return;
