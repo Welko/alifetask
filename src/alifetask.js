@@ -110,8 +110,9 @@ export default class ALifeTask {
 
         this.#pingpong = /** @type {[Pass, Pass]} */ ([undefined, undefined].map(() => {
             // All zeros
-            const initialTextureData = new Uint8Array(width * height * 4);
-
+            const numChannels = 4;
+            const initialTextureData = new Uint16Array(width * height * numChannels);
+            
             gl.activeTexture(gl.TEXTURE0 + 0);
             const populationTexture = createTexture(gl, {
                 width,
@@ -166,7 +167,7 @@ export default class ALifeTask {
         this.#swap();
     }
 
-    render() {
+    render() {  
         if (this.#programs === null) {
             return;
         }
@@ -194,8 +195,8 @@ export default class ALifeTask {
      * @property {number} x
      * @property {number} y
      * @property {number} radius
-     * @property {number} faction Range [1-255] - ignored if mode is 'erase'
-     * @property {number} intensity Range [1-255] - ignored if mode is 'erase'
+     * @property {'R' | 'G'} channel Ignored if mode is 'erase'
+     * @property {number} intensity Range: [0, 65535]
      * 
      * @param {BrushParams} params
      */
@@ -215,7 +216,15 @@ export default class ALifeTask {
         const endY = this.#canvas.height - params.y;
         const startX = this.#brush?.x ?? endX;
         const startY = this.#brush?.y ?? endY;
-        const color = [params.intensity, params.faction, 0, 0];
+
+        const color = [
+            params.channel === 'R' ? params.intensity : 0,
+            params.channel === 'G' ? params.intensity : 0,
+            0,
+            0,
+        ];
+
+        console.log(params, color);
 
         const [readPass, writePass] = this.#pingpong;
 

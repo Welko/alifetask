@@ -1,7 +1,7 @@
 #version 300 es
 
 precision highp float;
-precision lowp usampler2D;
+precision highp usampler2D;
 
 in vec2 vUv;
 
@@ -45,7 +45,7 @@ void main() {
         if (uMode == 0) {
             outColor = uColor;
         } else {
-            outColor = uvec4(0, 0, 0, 0);
+            outColor = uvec4(0u, 0u, 0u, 0u);
         }
     }
 }

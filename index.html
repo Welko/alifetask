@@ -20,20 +20,20 @@
     
     <br/>
 
-    <label for="faction">Faction</label>
-    <select id="faction" onchange="faction = parseInt(this.value)">
-        <option value="1">1</option>
-        <option value="2">2</option>
+    <label for="channel">Channel</label>
+    <select id="channel" onchange="channel = this.value">
+        <option value="R">R</option>
+        <option value="G">G</option>
     </select>
     
     <br/>
 
-    <input type="range" id="intensity" min="1" max="255" value="1" oninput="setIntensity(this.value)">
+    <input type="range" id="intensity" min="0" max="65535" value="65535" oninput="setIntensity(this.value)">
     <label for="intensity" id="intensityLabel"></label>
 
     <script>
         let speed = document.getElementById('speed').value;
-        let faction = parseInt(document.getElementById('faction').value);
+        let channel = document.getElementById('channel').value;
         let intensity = parseInt(document.getElementById('intensity').value);
 
         const playButton = document.getElementById('play');
@@ -93,11 +93,10 @@
             const radius = 5;
             
             const brush = (event, action) => {
-                console.log(faction);
                 const br = app.domElement.getBoundingClientRect();
                 const x = event.clientX - br.left;
                 const y = event.clientY - br.top;
-                app.brush({ action, mode, x, y, radius, faction, intensity });
+                app.brush({ action, mode, x, y, radius, channel, intensity });
                 app.render();
             };
 

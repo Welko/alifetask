@@ -14,17 +14,17 @@ export function createTexture(gl, descriptor) {
         throw new Error('Could not create texture');
     }
 
-    if (descriptor.data.byteLength !== descriptor.width * descriptor.height * 4) {
+    if (descriptor.data.byteLength !== descriptor.width * descriptor.height * 4 * 2) {
         throw new Error('Data length does not match width and height');
     }
 
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
     const level = 0;
-    const internalFormat = gl.RGBA8UI;
+    const internalFormat = gl.RGBA16UI;//gl.RGBA8UI;
     const border = 0;
     const format = gl.RGBA_INTEGER;
-    const type = gl.UNSIGNED_BYTE;
+    const type = gl.UNSIGNED_SHORT;//gl.UNSIGNED_BYTE;
 
     gl.texImage2D(
         gl.TEXTURE_2D,
