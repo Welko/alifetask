@@ -267,7 +267,7 @@ export default class ALifeTask {
 
         // Fill data
         for (let i = 0; i < data.length; i += 4) {
-            const value = params.mode === 'uniform' ? params.intensity : Math.floor(Math.random() * 65536);
+            const value = params.mode === 'uniform' ? params.intensity : Math.floor(Math.random() * params.intensity);
             data[i + (params.channel === 'R' ? 0 : 1)] = value;
         }
 

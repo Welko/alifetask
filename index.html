@@ -28,7 +28,7 @@
     
     <br/>
 
-    <input type="range" id="intensity" min="0" max="65535" value="65535" oninput="setIntensity(this.value)">
+    <input type="range" id="intensity" min="1" max="65535" value="65535" oninput="setIntensity(this.value)">
     <label for="intensity" id="intensityLabel"></label>
     
     <br/>
@@ -38,7 +38,7 @@
         <option value="uniform">Uniform</option>
         <option value="random">Random</option>
     </select>
-    <button onclick="fill()">Fill Mode</button>
+    <button onclick="fill()">Fill</button>
 
     <script>
         let speed = document.getElementById('speed').value;

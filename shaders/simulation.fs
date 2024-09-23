@@ -13,45 +13,67 @@ uniform usampler2D uData0;
 /*uniform*/ float killRate = 0.065;
 /*uniform*/ float diffusionRateU = 0.16;
 /*uniform*/ float diffusionRateV = 0.08;
-/*uniform*/ float deltaTimeMs = 0.1;
+/*uniform*/ float deltaTimeMs = 0.5;
 
-void main() {
-    ivec2 pixelCoord = ivec2(gl_FragCoord.xy);
-
+vec2 laplacian(uvec2 c, ivec2 pixelCoord) {
     ivec2 pixelMin = ivec2(0, 0);
     ivec2 pixelMax = textureSize(uData0, 0) - ivec2(1, 1);
 
-    uint validT = uint(pixelCoord.y < pixelMax.y);
-    uint validB = uint(pixelCoord.y > pixelMin.y);
-    uint validL = uint(pixelCoord.x > pixelMin.x);
-    uint validR = uint(pixelCoord.x < pixelMax.x);
+    bool validT = pixelCoord.y < pixelMax.y;
+    bool validB = pixelCoord.y > pixelMin.y;
+    bool validL = pixelCoord.x > pixelMin.x;
+    bool validR = pixelCoord.x < pixelMax.x;
+    bool validTL = validT && validL;
+    bool validTR = validT && validR;
+    bool validBL = validB && validL;
+    bool validBR = validB && validR;
 
-    ivec2 topPixel = pixelCoord + ivec2(0, 1);
-    ivec2 bottomPixel = pixelCoord + ivec2(0, -1);
-    ivec2 leftPixel = pixelCoord + ivec2(-1, 0);
-    ivec2 rightPixel = pixelCoord + ivec2(1, 0);
+    ivec2 pixelT = validT ? pixelCoord + ivec2(0, 1) : ivec2(pixelCoord.x, pixelMax.y);
+    ivec2 pixelB = validB ? pixelCoord + ivec2(0, -1) : ivec2(pixelCoord.x, pixelMin.y);
+    ivec2 pixelL = validL ? pixelCoord + ivec2(-1, 0) : ivec2(pixelMin.x, pixelCoord.y);
+    ivec2 pixelR = validR ? pixelCoord + ivec2(1, 0) : ivec2(pixelMax.x, pixelCoord.y);
+    ivec2 pixelTL = validTL ? pixelCoord + ivec2(-1, 1) : ivec2(pixelMin.x, pixelMax.y);
+    ivec2 pixelTR = validTR ? pixelCoord + ivec2(1, 1) : ivec2(pixelMax.x, pixelMax.y);
+    ivec2 pixelBL = validBL ? pixelCoord + ivec2(-1, -1) : ivec2(pixelMin.x, pixelMin.y);
+    ivec2 pixelBR = validBR ? pixelCoord + ivec2(1, -1) : ivec2(pixelMax.x, pixelMin.y);
 
-    // Get our concentration values (c) and neighbors
-    vec4 c  = vec4(texelFetch(uData0, pixelCoord, 0)) / 65535.0;
-    vec4 cT = vec4(texelFetch(uData0, topPixel, 0) * validT) / 65535.0;
-    vec4 cB = vec4(texelFetch(uData0, bottomPixel, 0) * validB) / 65535.0;
-    vec4 cL = vec4(texelFetch(uData0, leftPixel, 0) * validL) / 65535.0;
-    vec4 cR = vec4(texelFetch(uData0, rightPixel, 0) * validR) / 65535.0;
+    // Wrap around
+    uvec2 rg = c;
+    uvec2 rgT = texelFetch(uData0, pixelT, 0).rg;
+    uvec2 rgB = texelFetch(uData0, pixelB, 0).rg;
+    uvec2 rgL = texelFetch(uData0, pixelL, 0).rg;
+    uvec2 rgR = texelFetch(uData0, pixelR, 0).rg;
+    uvec2 rgTR = texelFetch(uData0, pixelTR, 0).rg;
+    uvec2 rgBR = texelFetch(uData0, pixelBR, 0).rg;
+    uvec2 rgBL = texelFetch(uData0, pixelBL, 0).rg;
+    uvec2 rgTL = texelFetch(uData0, pixelTL, 0).rg;
+
+    return vec2(
+        vec2(rgTL + rgTR + rgBL + rgBR) * 0.05 +
+        vec2(rgT + rgB + rgL + rgR) * 0.2 +
+        vec2(rg) * -1.0
+    ) / 65535.0;
+}
+
+void main() {
+    ivec2 pixelCoord = ivec2(gl_FragCoord.xy);
+    
+    // Concentration (c)
+    uvec4 c = texelFetch(uData0, pixelCoord, 0);
 
     // Gray-Scott model
     // https://en.wikipedia.org/wiki/Reaction%E2%80%93diffusion_system
     {
-        float U = c.r;
-        float V = c.g;
+        float U = float(c.r) / 65535.0;
+        float V = float(c.g) / 65535.0;
 
         // Calculate Laplacian for chemicals
-        float lapU = -U + (cT.r + cB.r + cL.r + cR.r) / 4.0;
-        float lapV = -V + (cT.g + cB.g + cL.g + cR.g) / 4.0;
+        vec2 lap = laplacian(c.rg, pixelCoord);
     
         // Gray-Scott equations
         float uvv = U * V * V;
-        float dU = diffusionRateU * lapU - uvv + feedRate * (1.0 - U);
-        float dV = diffusionRateV * lapV + uvv - (feedRate + killRate) * V;
+        float dU = diffusionRateU * lap.x - uvv + feedRate * (1.0 - U);
+        float dV = diffusionRateV * lap.y + uvv - (feedRate + killRate) * V;
 
         // Update U and V with time step
         U += dU * deltaTimeMs;
@@ -61,5 +83,5 @@ void main() {
         return;
     }
 
-    outColor = uvec4(c * 65535.0);
+    outColor = c;
 }
