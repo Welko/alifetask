@@ -224,8 +224,6 @@ export default class ALifeTask {
             0,
         ];
 
-        console.log(params, color);
-
         const [readPass, writePass] = this.#pingpong;
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, writePass.framebuffer);
@@ -245,6 +243,37 @@ export default class ALifeTask {
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
         this.#brush = params.action === 'up' ? null : {x: endX, y: endY};
+
+        this.#swap();
+    }
+
+    /**
+     * @typedef FillParams
+     * @property {'R' | 'G'} channel
+     * @property {'uniform' | 'random'} mode
+     * @property {number} intensity Range: [0, 65535]
+     * 
+     * @param {FillParams} params
+     */
+    fill(params) {
+        const gl = this.#gl;
+
+        const [readPass, writePass] = this.#pingpong;
+
+        // Read data from the read pass
+        const data = new Uint16Array(this.#canvas.width * this.#canvas.height * 4);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, readPass.framebuffer);
+        gl.readPixels(0, 0, this.#canvas.width, this.#canvas.height, gl.RGBA_INTEGER, gl.UNSIGNED_SHORT, data);
+
+        // Fill data
+        for (let i = 0; i < data.length; i += 4) {
+            const value = params.mode === 'uniform' ? params.intensity : Math.floor(Math.random() * 65536);
+            data[i + (params.channel === 'R' ? 0 : 1)] = value;
+        }
+
+        // Write data to the write pass using texSubImage2D
+        gl.bindTexture(gl.TEXTURE_2D, writePass.textures.data0);
+        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, this.#canvas.width, this.#canvas.height, gl.RGBA_INTEGER, gl.UNSIGNED_SHORT, data);
 
         this.#swap();
     }

@@ -30,11 +30,21 @@
 
     <input type="range" id="intensity" min="0" max="65535" value="65535" oninput="setIntensity(this.value)">
     <label for="intensity" id="intensityLabel"></label>
+    
+    <br/>
+
+    <label for="fillMode">Fill mode</label>
+    <select id="fillMode" onchange="fillMode = this.value">
+        <option value="uniform">Uniform</option>
+        <option value="random">Random</option>
+    </select>
+    <button onclick="fill()">Fill Mode</button>
 
     <script>
         let speed = document.getElementById('speed').value;
         let channel = document.getElementById('channel').value;
         let intensity = parseInt(document.getElementById('intensity').value);
+        let fillMode = document.getElementById('fillMode').value;
 
         const playButton = document.getElementById('play');
         const speedLabel = document.getElementById('speedLabel');
@@ -44,6 +54,12 @@
 
         function step() {
             app.update();
+            app.render();
+        }
+
+        function fill() {
+            const mode = fillMode;
+            app.fill({ channel, mode, intensity });
             app.render();
         }
 
