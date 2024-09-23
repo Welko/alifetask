@@ -57,6 +57,22 @@ void main() {
     float g = data0.g;
     float b = 0.0;
     float a = 1.0;
+
+    vec3 color0 = vec3(uvec3(0u, 0u, 0u));
+    vec3 color1 = vec3(uvec3(0x00u, 0x5cu, 0x5au)) / 255.0; // #005c5a
+    vec3 color2 = vec3(uvec3(0x00u, 0x82u, 0x63u)) / 255.0; // #008263
+    vec3 color3 = vec3(uvec3(0x00u, 0xffu, 0x00u)) / 255.0; // #03ff00
+
+    vec3 resultColor;
+    if (g < 0.5) {
+        resultColor = mix(color0, color1, g * 2.0);
+    } else if (g < 0.75) {
+        resultColor = mix(color1, color2, (g - 0.5) * 4.0);
+    } else {
+        resultColor = mix(color2, color3, (g - 0.75) * 4.0);
+    }
+    outColor = vec4(resultColor, 1.0);
+    return;
     
     outColor = vec4(r, g, b, a);
 
