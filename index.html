@@ -183,7 +183,7 @@
         <p style="text-align: center;">by <b>Lucas Melo</b> <br/> to Graswald <br/> with love</p>
 
         <!-- Play button -->
-        <button class="play-button play" id="playButton" onclick="play()"></button>
+        <button class="play-button play" id="playButton" onclick="this.classList.contains('play') ? play() : pause()"></button>
         <div class="spacing"></div>
         <ul class="custom-ul">
             <li class="bullet-speed">
@@ -259,17 +259,21 @@
 
         let interval;
         function play() {
-            if (interval) {
-                clearInterval(interval);
-                interval = null;
-            } else {
-                interval = setInterval(() => {
-                    app.update();
-                    app.render();
-                }, 1000 / speed);
-            }
-            playButton.classList.toggle('play');
-            playButton.classList.toggle('pause');
+            if (interval) return;
+            interval = setInterval(() => {
+                app.update();
+                app.render();
+            }, 1000 / speed);
+            playButton.classList.remove('play');
+            playButton.classList.add('pause');
+        }
+
+        function pause() {
+            if (!interval) return;
+            clearInterval(interval);
+            interval = null;
+            playButton.classList.remove('pause');
+            playButton.classList.add('play');
         }
 
         function resetClear() {
@@ -377,16 +381,21 @@
                 app.domElement.addEventListener('mouseup', (e)=>brush(e, 'up'));
                 app.domElement.addEventListener('contextmenu', (e)=>e.preventDefault());
 
+                let timeoutFirstFrame = null;
                 const doFirstFrame = () => {
+                    if (timeoutFirstFrame) clearTimeout(timeoutFirstFrame);
+                    timeoutFirstFrame = null;
                     resetRandomize();
-                    app.render();
+                    app.fill({ channel: 'R', mode: 'uniform', intensity: 255 });
+                    app.fill({ channel: 'G', mode: 'random', intensity: 255, threshold: 0.2 });
+                    play();
                 };
-                doFirstFrame();
+                timeoutFirstFrame = setTimeout(doFirstFrame, 1000);
 
-                let timeout = null;
+                let timeoutReinitialize = null;
                 const reinitialize = () => {
-                    if (timeout) clearTimeout(timeout);
-                    timeout = setTimeout(() => {
+                    if (timeoutReinitialize) clearTimeout(timeoutReinitialize);
+                    timeoutReinitialize = setTimeout(() => {
                         const width = canvasContainer.clientWidth;
                         const height = canvasContainer.clientHeight;
                         app.initialize({width, height}).then(doFirstFrame);
