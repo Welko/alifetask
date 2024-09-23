@@ -43,7 +43,11 @@ void main() {
 
     if (distToLineSquared < radiusSquared) {
         if (uMode == 0) {
-            outColor = uColor;
+            // Fade based on distance to the line
+            float fade = 1.0 - sqrt(distToLineSquared) / uRadius;
+            vec4 inputData = vec4(outColor) / 65535.0;
+            vec4 newData = vec4(uColor) / 65535.0;
+            outColor = uvec4(mix(inputData, newData, fade) * 65535.0);
         } else {
             outColor = uvec4(0u, 0u, 0u, 0u);
         }

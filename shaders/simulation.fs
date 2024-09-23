@@ -28,16 +28,15 @@ vec2 laplacian(uvec2 c, ivec2 pixelCoord) {
     bool validBL = validB && validL;
     bool validBR = validB && validR;
 
-    ivec2 pixelT = validT ? pixelCoord + ivec2(0, 1) : ivec2(pixelCoord.x, pixelMax.y);
-    ivec2 pixelB = validB ? pixelCoord + ivec2(0, -1) : ivec2(pixelCoord.x, pixelMin.y);
-    ivec2 pixelL = validL ? pixelCoord + ivec2(-1, 0) : ivec2(pixelMin.x, pixelCoord.y);
-    ivec2 pixelR = validR ? pixelCoord + ivec2(1, 0) : ivec2(pixelMax.x, pixelCoord.y);
-    ivec2 pixelTL = validTL ? pixelCoord + ivec2(-1, 1) : ivec2(pixelMin.x, pixelMax.y);
-    ivec2 pixelTR = validTR ? pixelCoord + ivec2(1, 1) : ivec2(pixelMax.x, pixelMax.y);
-    ivec2 pixelBL = validBL ? pixelCoord + ivec2(-1, -1) : ivec2(pixelMin.x, pixelMin.y);
-    ivec2 pixelBR = validBR ? pixelCoord + ivec2(1, -1) : ivec2(pixelMax.x, pixelMin.y);
+    ivec2 pixelT = validT ? pixelCoord + ivec2(0, 1)     : pixelCoord;
+    ivec2 pixelB = validB ? pixelCoord + ivec2(0, -1)    : pixelCoord;
+    ivec2 pixelL = validL ? pixelCoord + ivec2(-1, 0)    : pixelCoord;
+    ivec2 pixelR = validR ? pixelCoord + ivec2(1, 0)     : pixelCoord;
+    ivec2 pixelTL = validTL ? pixelCoord + ivec2(-1, 1)  : pixelCoord;
+    ivec2 pixelTR = validTR ? pixelCoord + ivec2(1, 1)   : pixelCoord;
+    ivec2 pixelBL = validBL ? pixelCoord + ivec2(-1, -1) : pixelCoord;
+    ivec2 pixelBR = validBR ? pixelCoord + ivec2(1, -1)  : pixelCoord;
 
-    // Wrap around
     uvec2 rg = c;
     uvec2 rgT = texelFetch(uData0, pixelT, 0).rg;
     uvec2 rgB = texelFetch(uData0, pixelB, 0).rg;
