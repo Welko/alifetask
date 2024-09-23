@@ -52,12 +52,12 @@ export default class ALifeTask {
     /**
      * @type {null | {simulation: Program, render: Program, brush: Program}}
      */
-    #programs;
+    #programs = null;
 
     /**
-     * @type {[Pass, Pass]}
+     * @type {null | [Pass, Pass]}
      */
-    #pingpong;
+    #pingpong = null;
 
     /**
      * @type {null | {x: number, y: number}}
@@ -98,6 +98,21 @@ export default class ALifeTask {
 
         this.#canvas.width = width;
         this.#canvas.height = height;
+        this.#canvas.style.width = `${width}px`;
+        this.#canvas.style.height = `${height}px`;
+
+        if (this.#pingpong !== null) {
+            this.#pingpong.forEach(pass => {
+                gl.deleteFramebuffer(pass.framebuffer);
+                gl.deleteTexture(pass.textures.data0);
+            });
+        }
+
+        if (this.#programs !== null) {
+            Object.values(this.#programs).forEach(({program}) => {
+                gl.deleteProgram(program);
+            });
+        }
 
         const promises = [];
 
@@ -171,11 +186,14 @@ export default class ALifeTask {
     }
 
     #swap() {
+        if (this.#pingpong === null) {
+            return;
+        }
         [this.#pingpong[0], this.#pingpong[1]] = [this.#pingpong[1], this.#pingpong[0]];
     }
 
     update() {
-        if (this.#programs === null) {
+        if (this.#programs === null || this.#pingpong === null) {
             return;
         }
 
@@ -204,7 +222,7 @@ export default class ALifeTask {
     }
 
     render() {  
-        if (this.#programs === null) {
+        if (this.#programs === null || this.#pingpong === null) {
             return;
         }
 
@@ -237,7 +255,7 @@ export default class ALifeTask {
      * @param {BrushParams} params
      */
     brush(params) {
-        if (this.#programs === null) {
+        if (this.#programs === null || this.#pingpong === null) {
             return;
         }
 
@@ -297,6 +315,10 @@ export default class ALifeTask {
      * @param {FillParams} params
      */
     fill(params) {
+        if (this.#pingpong === null) {
+            return;
+        }
+
         const gl = this.#gl;
 
         const [readPass, writePass] = this.#pingpong;

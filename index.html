@@ -23,9 +23,11 @@
         }
         #canvasContainer {
             flex-grow: 1;
+            overflow: hidden;
         }
         #menu {
             flex-grow: 0;
+            flex-shrink: 0;
             padding: 1em;
             display: flex;
             flex-direction: column;
@@ -375,8 +377,27 @@
                 app.domElement.addEventListener('mouseup', (e)=>brush(e, 'up'));
                 app.domElement.addEventListener('contextmenu', (e)=>e.preventDefault());
 
-                resetRandomize();
-                app.render();
+                const doFirstFrame = () => {
+                    resetRandomize();
+                    app.render();
+                };
+                doFirstFrame();
+
+                let timeout = null;
+                const reinitialize = () => {
+                    if (timeout) clearTimeout(timeout);
+                    timeout = setTimeout(() => {
+                        const width = canvasContainer.clientWidth;
+                        const height = canvasContainer.clientHeight;
+                        app.initialize({width, height}).then(doFirstFrame);
+                    }, 500);
+                }
+
+                // Resize observer
+                const resizeObserver = new ResizeObserver(entries => {
+                    reinitialize();
+                });
+                resizeObserver.observe(canvasContainer);
             });
         }
     </script>
