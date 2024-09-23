@@ -14,17 +14,17 @@ export function createTexture(gl, descriptor) {
         throw new Error('Could not create texture');
     }
 
-    if (descriptor.data.byteLength !== descriptor.width * descriptor.height * 4 * 2) {
+    if (descriptor.data.byteLength !== descriptor.width * descriptor.height * 4) {
         throw new Error('Data length does not match width and height');
     }
 
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
     const level = 0;
-    const internalFormat = gl.RGBA16UI;//gl.RGBA8UI;
+    const internalFormat = gl.RGBA;
     const border = 0;
-    const format = gl.RGBA_INTEGER;
-    const type = gl.UNSIGNED_SHORT;//gl.UNSIGNED_BYTE;
+    const format = gl.RGBA;
+    const type = gl.UNSIGNED_BYTE;
 
     gl.texImage2D(
         gl.TEXTURE_2D,
@@ -40,8 +40,8 @@ export function createTexture(gl, descriptor) {
 
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
     
     gl.bindTexture(gl.TEXTURE_2D, null);
 

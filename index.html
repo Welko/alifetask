@@ -242,7 +242,7 @@
             <li class="bullet-refresh">
                 <button onclick="resetClear()">Clear</button>
                 <span style="white-space: pre;"> </span>
-                <button onclick="resetRandomize()">Randomize</button>
+                <button onclick="resetRandomize()">Reset</button>
             </li>
         </ul>
     </div>
@@ -251,7 +251,8 @@
         let speed;
         let radius;
         const channel = 'G';
-        const intensity = 65535;
+        const intensity = 0.2 * 255;
+        const clearIntensity = 255;
         let params;
 
         let interval;
@@ -270,7 +271,7 @@
         }
 
         function resetClear() {
-            app.fill({ channel: 'R', mode: 'uniform', intensity: 65535 });
+            app.fill({ channel: 'R', mode: 'uniform', intensity: clearIntensity });
             app.fill({ channel: 'G', mode: 'uniform', intensity: 0 });
             app.render();
         }
@@ -279,8 +280,8 @@
             const min = parseInt(radiusSlider.min);
             const max = parseInt(radiusSlider.max);
             const threshold = (radius - min) / (max - min);
-            app.fill({ channel: 'R', mode: 'uniform', intensity: 65535 });
-            app.fill({ channel: 'G', mode: 'random', intensity: 65535, threshold });
+            app.fill({ channel: 'R', mode: 'uniform', intensity: clearIntensity });
+            app.fill({ channel: 'G', mode: 'random', intensity: intensity, threshold });
             app.render();
         }
 
@@ -374,7 +375,7 @@
                 app.domElement.addEventListener('mouseup', (e)=>brush(e, 'up'));
                 app.domElement.addEventListener('contextmenu', (e)=>e.preventDefault());
 
-                app.fill({ channel: 'R', mode: 'uniform', intensity: 65535 });
+                resetRandomize();
                 app.render();
             });
         }

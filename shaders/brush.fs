@@ -1,21 +1,20 @@
 #version 300 es
 
 precision highp float;
-precision highp usampler2D;
 
 in vec2 vUv;
 
-out uvec4 outColor;
+out vec4 outColor;
 
 // Data
-uniform usampler2D uData0;
+uniform sampler2D uData0;
 
 // Brush parameters
 uniform int uMode; // 0: draw, 1: erase
 uniform vec2 uStart;
 uniform vec2 uEnd;
 uniform float uRadius;
-uniform uvec4 uColor;
+uniform vec4 uColor;
 
 void main() {
     vec2 pixelCoord = gl_FragCoord.xy;
@@ -45,11 +44,9 @@ void main() {
         if (uMode == 0) {
             // Fade based on distance to the line
             float fade = 1.0 - sqrt(distToLineSquared) / uRadius;
-            vec4 inputData = vec4(outColor) / 65535.0;
-            vec4 newData = vec4(uColor) / 65535.0;
-            outColor = uvec4(mix(inputData, newData, fade) * 65535.0);
+            outColor += uColor * fade;
         } else {
-            outColor = uvec4(0u, 0u, 0u, 0u);
+            outColor = vec4(0u, 0u, 0u, 0u);
         }
     }
 }

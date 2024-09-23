@@ -141,7 +141,7 @@ export default class ALifeTask {
         this.#pingpong = /** @type {[Pass, Pass]} */ ([undefined, undefined].map(() => {
             // All zeros
             const numChannels = 4;
-            const initialTextureData = new Uint16Array(width * height * numChannels);
+            const initialTextureData = new Uint8Array(width * height * numChannels);
             
             gl.activeTexture(gl.TEXTURE0 + 0);
             const populationTexture = createTexture(gl, {
@@ -185,6 +185,7 @@ export default class ALifeTask {
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, writePass.framebuffer);
         gl.viewport(0, 0, this.#canvas.width, this.#canvas.height);
+        gl.clear(gl.COLOR_BUFFER_BIT);
 
         gl.useProgram(this.#programs.simulation.program);
         gl.uniform1i(this.#programs.simulation.uniformLocations.uData0, 0);
@@ -231,7 +232,7 @@ export default class ALifeTask {
      * @property {number} y
      * @property {number} radius
      * @property {'R' | 'G'} channel Ignored if mode is 'erase'
-     * @property {number} intensity Range: [0, 65535]
+     * @property {number} intensity Range: [0, 255]
      * 
      * @param {BrushParams} params
      */
@@ -258,8 +259,8 @@ export default class ALifeTask {
         }
 
         const color = [
-            params.channel === 'R' ? params.intensity : 0,
-            params.channel === 'G' ? params.intensity : 0,
+            params.channel === 'R' ? params.intensity / 255 : 0,
+            params.channel === 'G' ? params.intensity / 255: 0,
             0,
             0,
         ];
@@ -268,6 +269,7 @@ export default class ALifeTask {
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, writePass.framebuffer);
         gl.viewport(0, 0, this.#canvas.width, this.#canvas.height);
+        gl.clear(gl.COLOR_BUFFER_BIT);
 
         gl.useProgram(this.#programs.brush.program);
         gl.uniform1i(this.#programs.brush.uniformLocations.uData0, 0);
@@ -275,7 +277,7 @@ export default class ALifeTask {
         gl.uniform2f(this.#programs.brush.uniformLocations.uStart, startX, startY);
         gl.uniform2f(this.#programs.brush.uniformLocations.uEnd, endX, endY);
         gl.uniform1f(this.#programs.brush.uniformLocations.uRadius, params.radius);
-        gl.uniform4uiv(this.#programs.brush.uniformLocations.uColor, color);
+        gl.uniform4fv(this.#programs.brush.uniformLocations.uColor, color);
 
         gl.activeTexture(gl.TEXTURE0 + 0);
         gl.bindTexture(gl.TEXTURE_2D, readPass.textures.data0);
@@ -289,7 +291,7 @@ export default class ALifeTask {
      * @typedef FillParams
      * @property {'R' | 'G'} channel
      * @property {'uniform' | 'random'} mode
-     * @property {number} intensity Range: [0, 65535]
+     * @property {number} intensity Range: [0, 255]
      * @property {number} threshold Range: [0, 1] - Ignored if mode is 'uniform'
      * 
      * @param {FillParams} params
@@ -300,9 +302,9 @@ export default class ALifeTask {
         const [readPass, writePass] = this.#pingpong;
 
         // Read data from the read pass
-        const data = new Uint16Array(this.#canvas.width * this.#canvas.height * 4);
+        const data = new Uint8Array(this.#canvas.width * this.#canvas.height * 4);
         gl.bindFramebuffer(gl.FRAMEBUFFER, readPass.framebuffer);
-        gl.readPixels(0, 0, this.#canvas.width, this.#canvas.height, gl.RGBA_INTEGER, gl.UNSIGNED_SHORT, data);
+        gl.readPixels(0, 0, this.#canvas.width, this.#canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, data);
 
         // Fill data
         const offset = (params.channel === 'R' ? 0 : 1);
@@ -315,7 +317,7 @@ export default class ALifeTask {
 
         // Write data to the write pass using texSubImage2D
         gl.bindTexture(gl.TEXTURE_2D, writePass.textures.data0);
-        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, this.#canvas.width, this.#canvas.height, gl.RGBA_INTEGER, gl.UNSIGNED_SHORT, data);
+        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, this.#canvas.width, this.#canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, data);
 
         this.#swap();
     }

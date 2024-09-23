@@ -5,8 +5,8 @@
         "feedRate": 0.037,
         "killRate": 0.06,
         "diffusionRateU": 1,
-        "diffusionRateV": 2,
-        "deltaTime": 0.2
+        "diffusionRateV": 0.2,
+        "deltaTime": 0.5
     },
     {
         "name": "Spots",
@@ -14,8 +14,8 @@
         "feedRate": 0.03,
         "killRate": 0.062,
         "diffusionRateU": 1,
-        "diffusionRateV": 2,
-        "deltaTime": 0.2
+        "diffusionRateV": 0.2,
+        "deltaTime": 0.5
     },
     {
         "name": "Pulsating spots",
@@ -23,8 +23,8 @@
         "feedRate": 0.025,
         "killRate": 0.06,
         "diffusionRateU": 1,
-        "diffusionRateV": 2,
-        "deltaTime": 0.2
+        "diffusionRateV": 0.2,
+        "deltaTime": 0.5
     },
     {
         "name": "Worms",
@@ -32,8 +32,8 @@
         "feedRate": 0.078,
         "killRate": 0.061,
         "diffusionRateU": 1,
-        "diffusionRateV": 2,
-        "deltaTime": 0.2
+        "diffusionRateV": 0.2,
+        "deltaTime": 0.5
     },
     {
         "name": "Holes",
@@ -41,8 +41,8 @@
         "feedRate": 0.039,
         "killRate": 0.058,
         "diffusionRateU": 1,
-        "diffusionRateV": 2,
-        "deltaTime": 0.2
+        "diffusionRateV": 0.2,
+        "deltaTime": 0.5
     },
     {
         "name": "Spatiotemporal chaos",
@@ -50,8 +50,8 @@
         "feedRate": 0.026,
         "killRate": 0.051,
         "diffusionRateU": 1,
-        "diffusionRateV": 2,
-        "deltaTime": 0.2
+        "diffusionRateV": 0.2,
+        "deltaTime": 0.5
     },
     {
         "name": "Intermittent chaos/holes",
@@ -59,8 +59,8 @@
         "feedRate": 0.034,
         "killRate": 0.056,
         "diffusionRateU": 1,
-        "diffusionRateV": 2,
-        "deltaTime": 0.2
+        "diffusionRateV": 0.2,
+        "deltaTime": 0.5
     },
     {
         "name": "Moving spots (glider-like)",
@@ -68,8 +68,8 @@
         "feedRate": 0.014,
         "killRate": 0.054,
         "diffusionRateU": 1,
-        "diffusionRateV": 2,
-        "deltaTime": 0.2
+        "diffusionRateV": 0.2,
+        "deltaTime": 0.5
     },
     {
         "name": "Small waves",
@@ -77,8 +77,8 @@
         "feedRate": 0.018,
         "killRate": 0.051,
         "diffusionRateU": 1,
-        "diffusionRateV": 2,
-        "deltaTime": 0.2
+        "diffusionRateV": 0.2,
+        "deltaTime": 0.5
     },
     {
         "name": "Big waves",
@@ -86,8 +86,8 @@
         "feedRate": 0.014,
         "killRate": 0.045,
         "diffusionRateU": 1,
-        "diffusionRateV": 2,
-        "deltaTime": 0.2
+        "diffusionRateV": 0.2,
+        "deltaTime": 0.5
     },
     {
         "name": "U-skate world",
@@ -95,7 +95,16 @@
         "feedRate": 0.062,
         "killRate": 0.061,
         "diffusionRateU": 1,
-        "diffusionRateV": 2,
-        "deltaTime": 0.2
+        "diffusionRateV": 0.2,
+        "deltaTime": 0.5
+    },
+    {
+        "name": "piotrekli",
+        "comment": "Source: https://www.shadertoy.com/view/XdG3WG#",
+        "feedRate": 0.022,
+        "killRate": 0.053,
+        "diffusionRateU": 1,
+        "diffusionRateV": 0.5,
+        "deltaTime": 0.5
     }
 ]

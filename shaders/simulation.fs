@@ -1,13 +1,12 @@
 #version 300 es
 
 precision highp float;
-precision mediump usampler2D;
 
 in vec2 vUv;
 
-out uvec4 outColor;
+out vec4 outColor;
 
-uniform usampler2D uData0;
+uniform sampler2D uData0;
 
 uniform float uFeedRate;
 uniform float uKillRate;
@@ -15,59 +14,38 @@ uniform float uDiffusionRateU;
 uniform float uDiffusionRateV;
 uniform float uDeltaTime;
 
-vec2 laplacian(uvec2 c, ivec2 pixelCoord) {
-    ivec2 pixelMin = ivec2(0, 0);
-    ivec2 pixelMax = textureSize(uData0, 0) - ivec2(1, 1);
+vec2 laplacian(vec2 c) {
+    vec2 texelSize = 1.0 / vec2(textureSize(uData0, 0));
 
-    bool validT = pixelCoord.y < pixelMax.y;
-    bool validB = pixelCoord.y > pixelMin.y;
-    bool validL = pixelCoord.x > pixelMin.x;
-    bool validR = pixelCoord.x < pixelMax.x;
-    bool validTL = validT && validL;
-    bool validTR = validT && validR;
-    bool validBL = validB && validL;
-    bool validBR = validB && validR;
-
-    ivec2 pixelT = validT ? pixelCoord + ivec2(0, 1)     : pixelCoord;
-    ivec2 pixelB = validB ? pixelCoord + ivec2(0, -1)    : pixelCoord;
-    ivec2 pixelL = validL ? pixelCoord + ivec2(-1, 0)    : pixelCoord;
-    ivec2 pixelR = validR ? pixelCoord + ivec2(1, 0)     : pixelCoord;
-    ivec2 pixelTL = validTL ? pixelCoord + ivec2(-1, 1)  : pixelCoord;
-    ivec2 pixelTR = validTR ? pixelCoord + ivec2(1, 1)   : pixelCoord;
-    ivec2 pixelBL = validBL ? pixelCoord + ivec2(-1, -1) : pixelCoord;
-    ivec2 pixelBR = validBR ? pixelCoord + ivec2(1, -1)  : pixelCoord;
-
-    uvec2 rg = c;
-    uvec2 rgT = texelFetch(uData0, pixelT, 0).rg;
-    uvec2 rgB = texelFetch(uData0, pixelB, 0).rg;
-    uvec2 rgL = texelFetch(uData0, pixelL, 0).rg;
-    uvec2 rgR = texelFetch(uData0, pixelR, 0).rg;
-    uvec2 rgTR = texelFetch(uData0, pixelTR, 0).rg;
-    uvec2 rgBR = texelFetch(uData0, pixelBR, 0).rg;
-    uvec2 rgBL = texelFetch(uData0, pixelBL, 0).rg;
-    uvec2 rgTL = texelFetch(uData0, pixelTL, 0).rg;
+    vec2 rg = c;
+    vec2 rgT  = texture(uData0, vUv + texelSize * vec2( 0,  1)).rg;
+    vec2 rgB  = texture(uData0, vUv + texelSize * vec2( 0, -1)).rg;
+    vec2 rgL  = texture(uData0, vUv + texelSize * vec2(-1,  0)).rg;
+    vec2 rgR  = texture(uData0, vUv + texelSize * vec2( 1,  0)).rg;
+    vec2 rgTR = texture(uData0, vUv + texelSize * vec2( 1,  1)).rg;
+    vec2 rgBR = texture(uData0, vUv + texelSize * vec2( 1, -1)).rg;
+    vec2 rgBL = texture(uData0, vUv + texelSize * vec2(-1, -1)).rg;
+    vec2 rgTL = texture(uData0, vUv + texelSize * vec2(-1,  1)).rg;
 
     return vec2(
-        vec2(rgTL + rgTR + rgBL + rgBR) * 0.05 +
-        vec2(rgT + rgB + rgL + rgR) * 0.2 +
-        vec2(rg) * -1.0
-    ) / 65535.0;
+        (rgTL + rgTR + rgBL + rgBR) * 0.05 +
+        (rgT + rgB + rgL + rgR) * 0.2 +
+        (rg) * -1.0
+    );
 }
 
 void main() {
-    ivec2 pixelCoord = ivec2(gl_FragCoord.xy);
-    
     // Concentration (c)
-    uvec4 c = texelFetch(uData0, pixelCoord, 0);
+    vec4 c = texture(uData0, vUv);
 
     // Gray-Scott model
     // https://en.wikipedia.org/wiki/Reaction%E2%80%93diffusion_system
     {
-        float U = float(c.r) / 65535.0;
-        float V = float(c.g) / 65535.0;
+        float U = float(c.r);
+        float V = float(c.g);
 
         // Calculate Laplacian for chemicals
-        vec2 lap = laplacian(c.rg, pixelCoord);
+        vec2 lap = laplacian(c.rg);
     
         // Gray-Scott equations
         float uvv = U * V * V;
@@ -78,7 +56,7 @@ void main() {
         U += dU * uDeltaTime;
         V += dV * uDeltaTime;
 
-        outColor = uvec4(vec4(U, V, 0.0, 0.0) * 65535.0);
+        outColor = vec4(U, V, 0.0, 0.0);
         return;
     }
 
