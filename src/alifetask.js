@@ -23,7 +23,7 @@ import {
  * @property {number} killRate
  * @property {number} diffusionRateU
  * @property {number} diffusionRateV
- * @property {number} deltaTimeMs
+ * @property {number} deltaTime
  */
 
 export default class ALifeTask {
@@ -36,7 +36,7 @@ export default class ALifeTask {
         killRate: 0.065,
         diffusionRateU: 0.16,
         diffusionRateV: 0.08,
-        deltaTimeMs: 0.5,
+        deltaTime: 0.5,
     };
     
     /**
@@ -120,7 +120,7 @@ export default class ALifeTask {
                 simulation: {
                     program: simulation,
                     uniformLocations: getUniformLocations(gl, simulation, [
-                        'uData0', 'uFeedRate', 'uKillRate', 'uDiffusionRateU', 'uDiffusionRateV', 'uDeltaTimeMs'
+                        'uData0', 'uFeedRate', 'uKillRate', 'uDiffusionRateU', 'uDiffusionRateV', 'uDeltaTime'
                     ]),
                 },
                 render: {
@@ -192,7 +192,7 @@ export default class ALifeTask {
         gl.uniform1f(this.#programs.simulation.uniformLocations.uKillRate, this.#params.killRate);
         gl.uniform1f(this.#programs.simulation.uniformLocations.uDiffusionRateU, this.#params.diffusionRateU);
         gl.uniform1f(this.#programs.simulation.uniformLocations.uDiffusionRateV, this.#params.diffusionRateV);
-        gl.uniform1f(this.#programs.simulation.uniformLocations.uDeltaTimeMs, this.#params.deltaTimeMs);
+        gl.uniform1f(this.#programs.simulation.uniformLocations.uDeltaTime, this.#params.deltaTime);
 
         gl.activeTexture(gl.TEXTURE0 + 0);
         gl.bindTexture(gl.TEXTURE_2D, readPass.textures.data0);
@@ -251,6 +251,11 @@ export default class ALifeTask {
         const endY = this.#canvas.height - params.y;
         const startX = this.#brush?.x ?? endX;
         const startY = this.#brush?.y ?? endY;
+        
+        this.#brush = params.action === 'up' ? null : {x: endX, y: endY};
+        if (params.action === 'up') {
+            return;
+        }
 
         const color = [
             params.channel === 'R' ? params.intensity : 0,
@@ -277,8 +282,6 @@ export default class ALifeTask {
 
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-        this.#brush = params.action === 'up' ? null : {x: endX, y: endY};
-
         this.#swap();
     }
 
@@ -287,6 +290,7 @@ export default class ALifeTask {
      * @property {'R' | 'G'} channel
      * @property {'uniform' | 'random'} mode
      * @property {number} intensity Range: [0, 65535]
+     * @property {number} threshold Range: [0, 1] - Ignored if mode is 'uniform'
      * 
      * @param {FillParams} params
      */
@@ -301,9 +305,12 @@ export default class ALifeTask {
         gl.readPixels(0, 0, this.#canvas.width, this.#canvas.height, gl.RGBA_INTEGER, gl.UNSIGNED_SHORT, data);
 
         // Fill data
+        const offset = (params.channel === 'R' ? 0 : 1);
+        const v = params.mode === 'uniform'
+            ? () => params.intensity
+            : () => Math.random() < params.threshold ? params.intensity : 0;
         for (let i = 0; i < data.length; i += 4) {
-            const value = params.mode === 'uniform' ? params.intensity : Math.floor(Math.random() * params.intensity);
-            data[i + (params.channel === 'R' ? 0 : 1)] = value;
+            data[i + offset] = v();
         }
 
         // Write data to the write pass using texSubImage2D

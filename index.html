@@ -3,90 +3,258 @@
 <head>
     <title>Title</title>
     <style>
+        :root {
+            --bg: white;
+            --fg: rgb(55, 53, 47);
+            --mg: rgba(55, 53, 47, 0.16);
+        }
+        body {
+            font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+            background: var(--bg);
+            color: var(--fg);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+        #canvasContainer {
+            flex-grow: 1;
+        }
+        #menu {
+            flex-grow: 0;
+            padding: 1em;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        h1 {
+            font-size: 2em;
+            line-height: 1.2;
+            margin: 0;
+            text-align: center;
+        }
+        h2 {
+            font-size: 1.25em;
+            line-height: 1.3;
+            margin: 0 0 1em 0;
+            text-align: center;
+        }
+        p {
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        ul {
+            padding: 0;
+            margin: 0;
+        }
+        input {
+            min-width: 0;
+        }
+        .play-button {
+            /* Circle */
+            border-radius: 50%;
+            width: 3em;
+            height: 3em;
+            border: 2px solid var(--fg);
+            display: flex;
+            background: transparent;
+            margin: 0 auto;
+            flex-shrink: 0;
+        }
+        .play-button:hover {
+            cursor: pointer;
+            background: var(--mg);
+        }
+        .play-button.play:after {
+            content: '▶';
+        }
+        .play-button.pause:after {
+            content: '❚❚';
+        }
+        .play-button:after {
+            margin: auto;
+            line-height: 1em;
+        }
+        .separator {
+            margin: 1em 0;
+            border-top: 1px solid var(--mg);
+        }
+        .spacing {
+            margin: 0.5em 0;
+        }
+        .custom-ul > li {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+        .custom-ul > li:before {
+            content: '';
+            display: inline-block;
+            width: 1em;
+            height: 1em;
+            background-size: contain;
+            background-repeat: no-repeat;
+            margin-right: 0.5em;
+        }
+        .bullet-mouse-left:before {
+            background-image: url('https://www.svgrepo.com/show/119940/mouse-left-button.svg');
+        }
+        .bullet-mouse-right:before {
+            background-image: url('https://www.svgrepo.com/show/175175/mouse-right-button.svg');
+        }
+        .bullet-circle:before {
+            background-image: url('https://www.svgrepo.com/show/532681/circle.svg');
+        }
+        .bullet-refresh:before {
+            background-image: url('https://www.svgrepo.com/show/489582/restart.svg');
+        }
+        .bullet-speed:before {
+            background-image: url('https://www.svgrepo.com/show/521235/speed.svg');
+        }
+        .bullet-du:before {
+            background-image: url('res/du.svg');
+        }
+        .bullet-dv:before {
+            background-image: url('res/dv.svg');
+        }
+        .bullet-dt:before {
+            background-image: url('res/dt.svg');
+        }
+        .bullet-feed:before {
+            background-image: url('res/feed.svg');
+        }
+        .bullet-kill:before {
+            background-image: url('res/kill.svg');
+        }
+        .slider {
+            display: flex;
+        }
+        .slider label {
+            flex-grow: 0;
+        }
+        .slider input {
+            flex-grow: 1;
+        }
+        .expandable > button, .collapsible > button {
+            border: none;
+            background: none;
+            border-radius: 0.25em;
+            width: 1.5em;
+            height: 1.5em;
+            cursor: pointer;
+        }
+        .expandable > button:before {
+            content: '▶';
+            font-size: 0.75em;
+            line-height: 0.75em;
+        }
+        .expandable.expanded > button:before {
+            content: '▼';
+            font-size: 0.75em;
+            line-height: 0.75em;
+        }
+        .expandable.expanded > div {
+            margin: 0.5em;
+            border-left: 1px solid var(--mg);
+            padding: 0.5em;
+        }
+        .expandable:not(.expanded) > div {
+            display: none;
+        }
+        .formula {
+            margin-right: 0.5em;
+            line-height: 1em;
+        }
     </style>
 </head>
 <body>
     <div id="canvasContainer"></div>
+    <div id="menu">
+        <h1>A-Life Task</h1>
 
-    <br/>
+        <p style="text-align: center;">by <b>Lucas Melo</b> <br/> to Graswald <br/> with love</p>
 
-    <button onclick="step()">Step</button>
-    <button id="play" onclick="play()">Play</button>
+        <!-- Play button -->
+        <button class="play-button play" id="playButton" onclick="play()"></button>
+        <div class="spacing"></div>
+        <ul class="custom-ul">
+            <li class="bullet-speed">
+                <span class="slider">
+                    <label for="speedSlider" id="speedLabel" style="width: 2.75em;"></label>
+                    <input type="range" id="speedSlider" min="1" max="100" value="10" oninput="setSpeed(this.value)">
+                </span>
+            </li>
+        </ul>
 
-    <br/>
+        <div class="separator"></div>
 
-    <input type="range" id="speed" min="1" max="100" value="10" oninput="setSpeed(this.value)">
-    <label for="speed" id="speedLabel"></label>
-    
-    <br/>
+        <h2>Simulation</h2>
+        <select id="simulationsSelect" disabled>
+            <option value="">Loading...</option>
+        </select>
+        <div class="spacing"></div>
+        <div class="expandable">
+            <button onclick="this.parentNode.classList.toggle('expanded');"></button>
+            Advanced
+            <div>
+                <div style="display: grid; grid-template-columns: min-content 1fr; gap: 0.25em;">
+                    <image class="formula" src="res/feed.svg"></image>
+                    <input type="number" id="feedRate" value="0.035" step="0.001" oninput="updateParams()">
 
-    <label for="channel">Channel</label>
-    <select id="channel" onchange="channel = this.value">
-        <option value="R">R</option>
-        <option value="G">G</option>
-    </select>
-    
-    <br/>
+                    <image class="formula" src="res/kill.svg"></image>
+                    <input type="number" id="killRate" value="0.065" step="0.001" oninput="updateParams()">
 
-    <input type="range" id="intensity" min="0" max="65535" value="65535" oninput="setIntensity(this.value)">
-    <label for="intensity" id="intensityLabel"></label>
-    
-    <br/>
+                    <image class="formula" src="res/du.svg"></image>
+                    <input type="number" id="diffusionRateU" value="0.16" step="0.01" oninput="updateParams()">
 
-    <label for="fillMode">Fill mode</label>
-    <select id="fillMode" onchange="fillMode = this.value">
-        <option value="uniform">Uniform</option>
-        <option value="random">Random</option>
-    </select>
-    <button onclick="fill()">Fill</button>
-    
-    <br/>
+                    <image class="formula" src="res/dv.svg"></image>
+                    <input type="number" id="diffusionRateV" value="0.08" step="0.01" oninput="updateParams()">
 
-    <label for="feedRate">Feed rate</label>
-    <input type="number" id="feedRate" value="0.035" step="0.001" oninput="updateParams()">
-    <br/>
-    <label for="killRate">Kill rate</label>
-    <input type="number" id="killRate" value="0.065" step="0.001" oninput="updateParams()">
-    <br/>
-    <label for="diffusionRateU">Diffusion rate U</label>
-    <input type="number" id="diffusionRateU" value="0.16" step="0.01" oninput="updateParams()">
-    <br/>
-    <label for="diffusionRateV">Diffusion rate V</label>
-    <input type="number" id="diffusionRateV" value="0.08" step="0.01" oninput="updateParams()">
-    <br/>
-    <label for="deltaTimeMs">Delta time (ms)</label>
-    <input type="number" id="deltaTimeMs" value="0.5" step="0.01" oninput="updateParams()">
+                    <image class="formula" src="res/dt.svg"></image>
+                    <input type="number" id="deltaTime" value="0.5" step="0.01" oninput="updateParams()">
+                </div>
+            </div>
+        </div>
+        
+        <div class="separator"></div>
+
+        <h2>Brushing</h2>
+        <!-- List with custom bullets -->
+        <ul class="custom-ul">
+            <li class="bullet-mouse-left">
+                Draw
+            </li>
+            <li class="bullet-mouse-right">
+                Erase
+            </li>
+            <li class="bullet-circle">
+                <span class="slider">
+                    <label for="radiusSlider" id="radiusSliderLabel" style="width: 2em;"></label>
+                    <input type="range" id="radiusSlider" min="1" max="100" value="10" oninput="setRadius(this.value)">
+                </span>
+            </li>
+            <li class="bullet-refresh">
+                <button onclick="resetClear()">Clear</button>
+                <span style="white-space: pre;"> </span>
+                <button onclick="resetRandomize()">Randomize</button>
+            </li>
+        </ul>
+    </div>
 
     <script>
-        let speed = document.getElementById('speed').value;
-        let channel = document.getElementById('channel').value;
-        let intensity = parseInt(document.getElementById('intensity').value);
-        let fillMode = document.getElementById('fillMode').value;
-        let params = {
-            feedRate: parseFloat(document.getElementById('feedRate').value),
-            killRate: parseFloat(document.getElementById('killRate').value),
-            diffusionRateU: parseFloat(document.getElementById('diffusionRateU').value),
-            diffusionRateV: parseFloat(document.getElementById('diffusionRateV').value),
-            deltaTimeMs: parseFloat(document.getElementById('deltaTimeMs').value),
-        };
+        let speed;
+        let radius;
+        const channel = 'G';
+        const intensity = 65535;
+        let params;
 
-        const playButton = document.getElementById('play');
-        const speedLabel = document.getElementById('speedLabel');
-        const intensityLabel = document.getElementById('intensityLabel');
-
-        let interval = null;
-
-        function step() {
-            app.update();
-            app.render();
-        }
-
-        function fill() {
-            const mode = fillMode;
-            app.fill({ channel, mode, intensity });
-            app.render();
-        }
-
+        let interval;
         function play() {
             if (interval) {
                 clearInterval(interval);
@@ -97,66 +265,119 @@
                     app.render();
                 }, 1000 / speed);
             }
-            playButton.innerText = interval ? 'Pause' : 'Play';
+            playButton.classList.toggle('play');
+            playButton.classList.toggle('pause');
         }
 
+        function resetClear() {
+            app.fill({ channel: 'R', mode: 'uniform', intensity: 65535 });
+            app.fill({ channel: 'G', mode: 'uniform', intensity: 0 });
+            app.render();
+        }
+
+        function resetRandomize() {
+            const min = parseInt(radiusSlider.min);
+            const max = parseInt(radiusSlider.max);
+            const threshold = (radius - min) / (max - min);
+            app.fill({ channel: 'R', mode: 'uniform', intensity: 65535 });
+            app.fill({ channel: 'G', mode: 'random', intensity: 65535, threshold });
+            app.render();
+        }
+
+        function setRadius(value) {
+            radius = parseInt(value);
+            radiusSliderLabel.innerText = `${radius}`;
+        }
+        setRadius(radiusSlider.value);
+
         function setSpeed(value) {
-            speed = value;
-            speedLabel.innerText = `${speed} steps per second`;
+            speed = parseInt(value);
+            speedLabel.innerText = `${speed}/s`;
             if (interval) {
                 play();
                 play();
             }
         }
-        setSpeed(speed);
-
-        function setIntensity(value) {
-            intensity = value;
-            intensityLabel.innerText = `Intensity: ${intensity}`;
-        }
-        setIntensity(intensity);
+        setSpeed(speedSlider.value);
 
         function updateParams() {
             params = {
-                feedRate: parseFloat(document.getElementById('feedRate').value),
-                killRate: parseFloat(document.getElementById('killRate').value),
-                diffusionRateU: parseFloat(document.getElementById('diffusionRateU').value),
-                diffusionRateV: parseFloat(document.getElementById('diffusionRateV').value),
-                deltaTimeMs: parseFloat(document.getElementById('deltaTimeMs').value),
+                feedRate: parseFloat(feedRate.value),
+                killRate: parseFloat(killRate.value),
+                diffusionRateU: parseFloat(diffusionRateU.value),
+                diffusionRateV: parseFloat(diffusionRateV.value),
+                deltaTime: parseFloat(deltaTime.value),
             };
-            app.params = params;
+            if (window.app) app.params = params;
         }
+        updateParams();
+
+        fetch('res/simulations.json').then(response => response.text()).then(simulations => {
+            while (simulationsSelect.firstChild) simulationsSelect.removeChild(simulationsSelect.lastChild);
+            simulations = JSON.parse(simulations);
+            simulations.forEach((simulation, i) => {
+                const option = document.createElement('option');
+                option.value = i;
+                option.innerText = simulation.name;
+                simulationsSelect.appendChild(option);
+            });
+            if (simulations.length === 0) {
+                const option = document.createElement('option');
+                option.innerText = 'None available';
+                simulationsSelect.appendChild(option);
+            } else {
+                simulationsSelect.disabled = false;
+                const updateSimulation = () => {
+                    const simulation = simulations[simulationsSelect.value];
+                    feedRate.value = simulation.feedRate;
+                    killRate.value = simulation.killRate;
+                    diffusionRateU.value = simulation.diffusionRateU;
+                    diffusionRateV.value = simulation.diffusionRateV;
+                    deltaTime.value = simulation.deltaTime;
+                    updateParams();
+                    if (!window.app) return;
+                    // TODO: Reload :)
+                }
+                simulationsSelect.addEventListener('change', updateSimulation);
+                updateSimulation();
+            }
+        });
     </script>
 
     <script type="module">
         import ALifeTask from './src/alifetask.js';
 
-        const width = 512;
-        const height = 512;
+        window.onload = () => {
+            const canvasContainer = document.getElementById('canvasContainer');
+            const width = canvasContainer.clientWidth;
+            const height = canvasContainer.clientHeight;
 
-        window.app = new ALifeTask(params);
-        app.domElement.style.width = `${width}px`;
-        app.domElement.style.height = `${height}px`;
-        document.getElementById('canvasContainer').appendChild(app.domElement);
+            window.app = new ALifeTask(params);
+            app.domElement.style.width = `${width}px`;
+            app.domElement.style.height = `${height}px`;
+            document.getElementById('canvasContainer').appendChild(app.domElement);
 
-        app.initialize({width, height}).then(() => {
-            const mode = 'draw';
-            const radius = 5;
-            
-            const brush = (event, action) => {
-                const br = app.domElement.getBoundingClientRect();
-                const x = event.clientX - br.left;
-                const y = event.clientY - br.top;
-                app.brush({ action, mode, x, y, radius, channel, intensity });
+            app.initialize({width, height}).then(() => {
+                const brush = (event, action) => {
+                    const channel = event.buttons === 1 ? 'G' : 'R';
+                    const mode = 'draw';
+
+                    const br = app.domElement.getBoundingClientRect();
+                    const x = event.clientX - br.left;
+                    const y = event.clientY - br.top;
+                    app.brush({ action, mode, x, y, radius, channel, intensity });
+                    app.render();
+                };
+
+                app.domElement.addEventListener('mousedown', (e)=>brush(e, 'down'));
+                app.domElement.addEventListener('mousemove', (e)=>brush(e, 'move'));
+                app.domElement.addEventListener('mouseup', (e)=>brush(e, 'up'));
+                app.domElement.addEventListener('contextmenu', (e)=>e.preventDefault());
+
+                app.fill({ channel: 'R', mode: 'uniform', intensity: 65535 });
                 app.render();
-            };
-
-            app.domElement.addEventListener('mousedown', (e)=>brush(e, 'down'));
-            app.domElement.addEventListener('mousemove', (e)=>brush(e, 'move'));
-            app.domElement.addEventListener('mouseup', (e)=>brush(e, 'up'));
-
-            app.render();
-        });
+            });
+        }
     </script>
 </body>
 </html>

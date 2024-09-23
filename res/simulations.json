@@ -1,0 +1,101 @@
+[
+    {
+        "name": "Labyrinthine",
+        "comment": "Source: https://visualpde.com/nonlinear-physics/gray-scott.html",
+        "feedRate": 0.037,
+        "killRate": 0.06,
+        "diffusionRateU": 1,
+        "diffusionRateV": 2,
+        "deltaTime": 0.2
+    },
+    {
+        "name": "Spots",
+        "comment": "Source: https://visualpde.com/nonlinear-physics/gray-scott.html",
+        "feedRate": 0.03,
+        "killRate": 0.062,
+        "diffusionRateU": 1,
+        "diffusionRateV": 2,
+        "deltaTime": 0.2
+    },
+    {
+        "name": "Pulsating spots",
+        "comment": "Source: https://visualpde.com/nonlinear-physics/gray-scott.html",
+        "feedRate": 0.025,
+        "killRate": 0.06,
+        "diffusionRateU": 1,
+        "diffusionRateV": 2,
+        "deltaTime": 0.2
+    },
+    {
+        "name": "Worms",
+        "comment": "Source: https://visualpde.com/nonlinear-physics/gray-scott.html",
+        "feedRate": 0.078,
+        "killRate": 0.061,
+        "diffusionRateU": 1,
+        "diffusionRateV": 2,
+        "deltaTime": 0.2
+    },
+    {
+        "name": "Holes",
+        "comment": "Source: https://visualpde.com/nonlinear-physics/gray-scott.html",
+        "feedRate": 0.039,
+        "killRate": 0.058,
+        "diffusionRateU": 1,
+        "diffusionRateV": 2,
+        "deltaTime": 0.2
+    },
+    {
+        "name": "Spatiotemporal chaos",
+        "comment": "Source: https://visualpde.com/nonlinear-physics/gray-scott.html",
+        "feedRate": 0.026,
+        "killRate": 0.051,
+        "diffusionRateU": 1,
+        "diffusionRateV": 2,
+        "deltaTime": 0.2
+    },
+    {
+        "name": "Intermittent chaos/holes",
+        "comment": "Source: https://visualpde.com/nonlinear-physics/gray-scott.html",
+        "feedRate": 0.034,
+        "killRate": 0.056,
+        "diffusionRateU": 1,
+        "diffusionRateV": 2,
+        "deltaTime": 0.2
+    },
+    {
+        "name": "Moving spots (glider-like)",
+        "comment": "Source: https://visualpde.com/nonlinear-physics/gray-scott.html",
+        "feedRate": 0.014,
+        "killRate": 0.054,
+        "diffusionRateU": 1,
+        "diffusionRateV": 2,
+        "deltaTime": 0.2
+    },
+    {
+        "name": "Small waves",
+        "comment": "Source: https://visualpde.com/nonlinear-physics/gray-scott.html",
+        "feedRate": 0.018,
+        "killRate": 0.051,
+        "diffusionRateU": 1,
+        "diffusionRateV": 2,
+        "deltaTime": 0.2
+    },
+    {
+        "name": "Big waves",
+        "comment": "Source: https://visualpde.com/nonlinear-physics/gray-scott.html",
+        "feedRate": 0.014,
+        "killRate": 0.045,
+        "diffusionRateU": 1,
+        "diffusionRateV": 2,
+        "deltaTime": 0.2
+    },
+    {
+        "name": "U-skate world",
+        "comment": "Source: https://visualpde.com/nonlinear-physics/gray-scott.html",
+        "feedRate": 0.062,
+        "killRate": 0.061,
+        "diffusionRateU": 1,
+        "diffusionRateV": 2,
+        "deltaTime": 0.2
+    }
+]

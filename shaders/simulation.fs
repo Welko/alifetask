@@ -13,7 +13,7 @@ uniform float uFeedRate;
 uniform float uKillRate;
 uniform float uDiffusionRateU;
 uniform float uDiffusionRateV;
-uniform float uDeltaTimeMs;
+uniform float uDeltaTime;
 
 vec2 laplacian(uvec2 c, ivec2 pixelCoord) {
     ivec2 pixelMin = ivec2(0, 0);
@@ -75,8 +75,8 @@ void main() {
         float dV = uDiffusionRateV * lap.y + uvv - (uFeedRate + uKillRate) * V;
 
         // Update U and V with time step
-        U += dU * uDeltaTimeMs;
-        V += dV * uDeltaTimeMs;
+        U += dU * uDeltaTime;
+        V += dV * uDeltaTime;
 
         outColor = uvec4(vec4(U, V, 0.0, 0.0) * 65535.0);
         return;
