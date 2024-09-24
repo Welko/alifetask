@@ -1,0 +1,30 @@
+[
+    {
+        "name": "ciphrd no2",
+        "colors": [
+            { "x": 0, "value": "#000000" },
+            { "x": 0.5, "value": "#005c5a" },
+            { "x": 0.75, "value": "#008263" },
+            { "x": 1, "value": "#03ff00"}
+        ],
+        "source": "https://ciphrd.com/2019/08/24/reaction-diffusion-on-shader/"
+    },
+    {
+        "name": "Grayscale",
+        "colors": [
+            { "x": 0, "value": "#000000" },
+            { "x": 1, "value": "#ffffff" }
+        ]
+    },
+    {
+        "name": "Rainbow",
+        "colors": [
+            { "x": 0, "value": "#ff0000" },
+            { "x": 0.25, "value": "#ffff00" },
+            { "x": 0.5, "value": "#00ff00" },
+            { "x": 0.75, "value": "#00ffff" },
+            { "x": 1, "value": "#0000ff" }
+        ]
+    }
+
+]

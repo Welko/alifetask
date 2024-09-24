@@ -3,6 +3,8 @@
  * @property {number} width
  * @property {number} height
  * @property {ArrayBufferView} data
+ * @property {'nearest' | 'linear'} filter
+ * @property {'repeat' | 'clamp'} wrap
  * 
  * @param {WebGL2RenderingContext} gl 
  * @param {TextureDescriptor} descriptor
@@ -38,10 +40,13 @@ export function createTexture(gl, descriptor) {
         descriptor.data ?? null
     );
 
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    const filter = descriptor.filter === 'nearest' ? gl.NEAREST : gl.LINEAR;
+    const wrap = descriptor.wrap === 'repeat' ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
     
     gl.bindTexture(gl.TEXTURE_2D, null);
 

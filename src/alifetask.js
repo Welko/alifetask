@@ -24,6 +24,10 @@ import {
  * @property {number} diffusionRateU
  * @property {number} diffusionRateV
  * @property {number} deltaTime
+ * 
+ * @typedef ColorMapping
+ * @property {number} x
+ * @property {`#${string}`} value
  */
 
 export default class ALifeTask {
@@ -48,6 +52,11 @@ export default class ALifeTask {
      * @type {WebGL2RenderingContext}
      */
     #gl;
+
+    /**
+     * @type {WebGLTexture}
+     */
+    #transferFunction;
 
     /**
      * @type {null | {simulation: Program, render: Program, brush: Program}}
@@ -77,6 +86,16 @@ export default class ALifeTask {
             throw new Error('Could not get WebGL2 context');
         }
         this.#gl = gl;
+
+        this.#transferFunction = createTexture(gl, {
+            width: 256,
+            height: 1,
+            data: new Uint8Array(256 * 4),
+            filter: 'linear',
+            wrap: 'clamp',
+        });
+
+        this.scheme = [];
     }
 
     get domElement() {
@@ -88,6 +107,52 @@ export default class ALifeTask {
      */
     set params(params) {
         this.#params = {...this.#params, ...params};
+    }
+
+    /**
+     * @param {ColorMapping[]} scheme
+     */
+    set scheme(scheme) {
+        const gl = this.#gl;
+
+        if (scheme.length === 0) {
+            scheme = [
+                {x: 0, value: '#000000'},
+                {x: 1, value: '#ffffff'}
+            ];
+        } else if (scheme.length === 1) {
+            scheme.push(scheme[0]);
+        }
+
+        const stringToNumber = (value) => parseInt(value.slice(1), 16);
+        
+        const data = new Uint8Array(256 * 4);
+        for (let i = 0; i < 256; i++) {
+            const x = i / 255;
+
+            let nextIndex = scheme.findIndex(({x: x0}) => x0 > x);
+            const prevIndex = nextIndex === -1 ? scheme.length - 1 : nextIndex - 1;
+            nextIndex = nextIndex === -1 ? prevIndex : nextIndex;
+
+            const {x: x0, value: value0str} = scheme[prevIndex];
+            const {x: x1, value: value1str} = scheme[nextIndex];
+
+            const value0 = stringToNumber(value0str);
+            const value1 = stringToNumber(value1str);
+
+            const [r0, g0, b0] = [value0 >> 16, value0 >> 8 & 0xff, value0 & 0xff];
+            const [r1, g1, b1] = [value1 >> 16, value1 >> 8 & 0xff, value1 & 0xff];
+
+            const t = prevIndex === nextIndex ? 0 : (x - x0) / (x1 - x0);
+
+            data[i * 4 + 0] = r0 + t * (r1 - r0);
+            data[i * 4 + 1] = g0 + t * (g1 - g0);
+            data[i * 4 + 2] = b0 + t * (b1 - b0);
+            data[i * 4 + 3] = 255;
+        }
+
+        gl.bindTexture(gl.TEXTURE_2D, this.#transferFunction);
+        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 256, 1, gl.RGBA, gl.UNSIGNED_BYTE, data);
     }
 
     /**
@@ -141,7 +206,7 @@ export default class ALifeTask {
                 render: {
                     program: render,
                     uniformLocations: getUniformLocations(gl, render, [
-                        'uData0',
+                        'uData0', 'uTransferFunction'
                     ]),
                 },
                 brush: {
@@ -163,6 +228,8 @@ export default class ALifeTask {
                 width,
                 height,
                 data: initialTextureData,
+                filter: 'nearest',
+                wrap: 'repeat',
             });
 
             const framebuffer = createFramebuffer(gl, {
@@ -235,9 +302,13 @@ export default class ALifeTask {
 
         gl.useProgram(this.#programs.render.program);
         gl.uniform1i(this.#programs.render.uniformLocations.uData0, 0);
+        gl.uniform1i(this.#programs.render.uniformLocations.uTransferFunction, 1);
 
         gl.activeTexture(gl.TEXTURE0 + 0);
         gl.bindTexture(gl.TEXTURE_2D, readPass.textures.data0);
+
+        gl.activeTexture(gl.TEXTURE0 + 1);
+        gl.bindTexture(gl.TEXTURE_2D, this.#transferFunction);
 
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }

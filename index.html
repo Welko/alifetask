@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Title</title>
+    <title>A-Life Task by Lucas Melo</title>
     <style>
         :root {
             --bg: white;
@@ -24,6 +24,7 @@
         #canvasContainer {
             flex-grow: 1;
             overflow: hidden;
+            border-radius: 0.5em;
         }
         #menu {
             flex-grow: 0;
@@ -32,6 +33,7 @@
             display: flex;
             flex-direction: column;
             overflow-y: auto;
+            width: 16em;
         }
         h1 {
             font-size: 2em;
@@ -54,7 +56,16 @@
             margin: 0;
         }
         input {
+            height: 1.5em;
             min-width: 0;
+            padding: 0;
+        }
+        input[type="color"] {
+            border: none;
+            cursor: pointer;
+            width: auto;
+            height: auto;
+            border-radius: 0.25em;
         }
         .play-button {
             /* Circle */
@@ -143,7 +154,7 @@
         .slider input {
             flex-grow: 1;
         }
-        .expandable > button, .collapsible > button {
+        .expandable > button {
             border: none;
             background: none;
             border-radius: 0.25em;
@@ -173,6 +184,10 @@
             margin-right: 0.5em;
             line-height: 1em;
         }
+        .scheme {
+            height: 1.5em;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
@@ -182,14 +197,13 @@
 
         <p style="text-align: center;">by <b>Lucas Melo</b> <br/> to Graswald <br/> with love</p>
 
-        <!-- Play button -->
         <button class="play-button play" id="playButton" onclick="this.classList.contains('play') ? play() : pause()"></button>
         <div class="spacing"></div>
         <ul class="custom-ul">
             <li class="bullet-speed">
                 <span class="slider">
                     <label for="speedSlider" id="speedLabel" style="width: 2.75em;"></label>
-                    <input type="range" id="speedSlider" min="1" max="100" value="10" oninput="setSpeed(this.value)">
+                    <input type="range" id="speedSlider" min="1" max="100" value="100" oninput="setSpeed(this.value)">
                 </span>
             </li>
         </ul>
@@ -227,7 +241,6 @@
         <div class="separator"></div>
 
         <h2>Brushing</h2>
-        <!-- List with custom bullets -->
         <ul class="custom-ul">
             <li class="bullet-mouse-left">
                 Draw
@@ -238,7 +251,7 @@
             <li class="bullet-circle">
                 <span class="slider">
                     <label for="radiusSlider" id="radiusSliderLabel" style="width: 2em;"></label>
-                    <input type="range" id="radiusSlider" min="1" max="100" value="10" oninput="setRadius(this.value)">
+                    <input type="range" id="radiusSlider" min="1" max="100" value="20" oninput="setRadius(this.value)">
                 </span>
             </li>
             <li class="bullet-refresh">
@@ -247,6 +260,37 @@
                 <button onclick="resetRandomize()">Reset</button>
             </li>
         </ul>
+        
+        <div class="separator"></div>
+
+        <h2>Visuals</h2>
+        <select id="schemesSelect" disabled>
+            <option value="">Loading...</option>
+        </select>
+        <div class="spacing"></div>
+        <div id="schemeNode" class="scheme"></div>
+        <div class="spacing"></div>
+        <div style="display: grid; grid-template-columns: min-content 1fr 1fr; gap: 0.5em;">
+            <input type="checkbox" id="color0Enabled" oninput="updateScheme()" checked>
+            <input type="number" id="color0Value" oninput="updateScheme()" value="0" step="0.01" min="0" max="1">
+            <input type="color" id="color0Color" oninput="updateScheme()" value="#000000">
+
+            <input type="checkbox" id="color1Enabled" oninput="updateScheme()">
+            <input type="number" id="color1Value" oninput="updateScheme()" value="0.5" step="0.01" min="0" max="1">
+            <input type="color" id="color1Color" oninput="updateScheme()" value="#005c5a">
+            
+            <input type="checkbox" id="color2Enabled" oninput="updateScheme()">
+            <input type="number" id="color2Value" oninput="updateScheme()" value="0.75" step="0.01" min="0" max="1">
+            <input type="color" id="color2Color" oninput="updateScheme()" value="#008263">
+            
+            <input type="checkbox" id="color3Enabled" oninput="updateScheme()">
+            <input type="number" id="color3Value" oninput="updateScheme()" value="1" step="0.01" min="0" max="1">
+            <input type="color" id="color3Color" oninput="updateScheme()" value="#03ff00">
+            
+            <input type="checkbox" id="color4Enabled" oninput="updateScheme()" checked>
+            <input type="number" id="color4Value" oninput="updateScheme()" value="1" step="0.01" min="0" max="1">
+            <input type="color" id="color4Color" oninput="updateScheme()" value="#ffffff">
+        </div>
     </div>
 
     <script>
@@ -256,6 +300,7 @@
         const intensity = 255;
         const clearIntensity = 255;
         let params;
+        let scheme;
 
         let interval;
         function play() {
@@ -319,35 +364,78 @@
         }
         updateParams();
 
-        fetch('res/simulations.json').then(response => response.text()).then(simulations => {
-            while (simulationsSelect.firstChild) simulationsSelect.removeChild(simulationsSelect.lastChild);
-            simulations = JSON.parse(simulations);
-            simulations.forEach((simulation, i) => {
+        function updateScheme() {
+            scheme = [
+                { enabled: color0Enabled.checked, x: parseFloat(color0Value.value), value: color0Color.value },
+                { enabled: color1Enabled.checked, x: parseFloat(color1Value.value), value: color1Color.value },
+                { enabled: color2Enabled.checked, x: parseFloat(color2Value.value), value: color2Color.value },
+                { enabled: color3Enabled.checked, x: parseFloat(color3Value.value), value: color3Color.value },
+                { enabled: color4Enabled.checked, x: parseFloat(color4Value.value), value: color4Color.value },
+            ].filter(({ enabled }) => enabled);
+            if (window.app) app.scheme = scheme;
+            if (scheme.length == 0) schemeNode.style.background = 'black';
+            if (scheme.length == 1) schemeNode.style.background = scheme[0].color;
+            else schemeNode.style.background = `linear-gradient(to right, ${scheme.map(({ x, value }) => `${value} ${x * 100}%`).join(', ')})`;
+        }
+        updateScheme();
+
+        const loadSelectOptions = async (jsonUrl, selectNode) => {
+            const response = await fetch(jsonUrl);
+            const text = await response.text();
+
+            while (selectNode.firstChild) selectNode.removeChild(selectNode.lastChild);
+
+            const options = JSON.parse(text);
+
+            options.forEach((o, i) => {
                 const option = document.createElement('option');
                 option.value = i;
-                option.innerText = simulation.name;
-                simulationsSelect.appendChild(option);
+                option.innerText = o.name;
+                selectNode.appendChild(option);
             });
-            if (simulations.length === 0) {
+
+            if (options.length === 0) {
+                selectNode.disabled = true;
                 const option = document.createElement('option');
                 option.innerText = 'None available';
-                simulationsSelect.appendChild(option);
+                selectNode.appendChild(option);
             } else {
-                simulationsSelect.disabled = false;
-                const updateSimulation = () => {
-                    const simulation = simulations[simulationsSelect.value];
-                    feedRate.value = simulation.feedRate;
-                    killRate.value = simulation.killRate;
-                    diffusionRateU.value = simulation.diffusionRateU;
-                    diffusionRateV.value = simulation.diffusionRateV;
-                    deltaTime.value = simulation.deltaTime;
-                    updateParams();
-                    if (!window.app) return;
-                    // TODO: Reload :)
-                }
-                simulationsSelect.addEventListener('change', updateSimulation);
-                updateSimulation();
+                selectNode.disabled = false;
             }
+
+            return options;
+        }
+
+        loadSelectOptions('res/simulations.json', simulationsSelect).then(simulations => {
+            const updateSimulation = () => {
+                const simulation = simulations[simulationsSelect.value];
+                feedRate.value = simulation.feedRate;
+                killRate.value = simulation.killRate;
+                diffusionRateU.value = simulation.diffusionRateU;
+                diffusionRateV.value = simulation.diffusionRateV;
+                deltaTime.value = simulation.deltaTime;
+                updateParams();
+            }
+            simulationsSelect.addEventListener('change', updateSimulation);
+            updateSimulation();
+        });
+
+        loadSelectOptions('res/schemes.json', schemesSelect).then(schemes => {
+            const updateSchemeUi = () => {
+                const scheme = schemes[schemesSelect.value];
+                const colors = scheme.colors;
+                for (let i = 0; i < 5; i++) {
+                    const color = colors[i];
+                    window['color' + i + 'Enabled'].checked = color !== undefined;
+                    if (color !== undefined) {
+                        window['color' + i + 'Value'].value = color.x;
+                        window['color' + i + 'Color'].value = color.value;
+                    }
+                }
+                updateScheme();
+            }
+            schemesSelect.addEventListener('change', updateSchemeUi);
+            updateSchemeUi();
         });
     </script>
 
