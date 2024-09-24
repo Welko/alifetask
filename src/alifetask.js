@@ -28,6 +28,11 @@ import {
  * @typedef ColorMapping
  * @property {number} x
  * @property {`#${string}`} value
+ * 
+ * @typedef RenderData
+ * @property {WebGLTexture} transferFunction
+ * @property {number} lightIntensity
+ * @property {[number, number, number]} lightColor
  */
 
 export default class ALifeTask {
@@ -54,9 +59,9 @@ export default class ALifeTask {
     #gl;
 
     /**
-     * @type {WebGLTexture}
+     * @type {RenderData}
      */
-    #transferFunction;
+    #renderData;
 
     /**
      * @type {null | {simulation: Program, render: Program, brush: Program}}
@@ -69,7 +74,7 @@ export default class ALifeTask {
     #pingpong = null;
 
     /**
-     * @type {null | {x: number, y: number}}
+     * @type {null | {down: boolean, x: number, y: number}}
      */
     #brush = null;
 
@@ -87,13 +92,19 @@ export default class ALifeTask {
         }
         this.#gl = gl;
 
-        this.#transferFunction = createTexture(gl, {
+        const transferFunction = createTexture(gl, {
             width: 256,
             height: 1,
             data: new Uint8Array(256 * 4),
             filter: 'linear',
             wrap: 'clamp',
         });
+
+        this.#renderData = {
+            transferFunction,
+            lightIntensity: 0,
+            lightColor: [0, 0, 0],
+        };
 
         this.scheme = [];
     }
@@ -151,8 +162,18 @@ export default class ALifeTask {
             data[i * 4 + 3] = 255;
         }
 
-        gl.bindTexture(gl.TEXTURE_2D, this.#transferFunction);
+        gl.bindTexture(gl.TEXTURE_2D, this.#renderData.transferFunction);
         gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 256, 1, gl.RGBA, gl.UNSIGNED_BYTE, data);
+    }
+
+    /**
+     * @param {{color: `#${string}`, intensity: number}} light
+     */
+    set light({ color, intensity }) {
+        const r = parseInt(color.slice(1, 3), 16) / 255;
+        const g = parseInt(color.slice(3, 5), 16) / 255;
+        const b = parseInt(color.slice(5, 7), 16) / 255;
+        this.#renderData = {...this.#renderData, lightColor: [r, g, b], lightIntensity: intensity};
     }
 
     /**
@@ -206,7 +227,7 @@ export default class ALifeTask {
                 render: {
                     program: render,
                     uniformLocations: getUniformLocations(gl, render, [
-                        'uData0', 'uTransferFunction'
+                        'uData0', 'uTransferFunction', 'uMouse', 'uLightIntensity', 'uLightColor'
                     ]),
                 },
                 brush: {
@@ -295,6 +316,9 @@ export default class ALifeTask {
 
         const gl = this.#gl;
 
+        const mouseX = this.#brush?.x ?? -1;
+        const mouseY = this.#brush?.y ?? -1;
+
         const [readPass] = this.#pingpong;
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -303,12 +327,15 @@ export default class ALifeTask {
         gl.useProgram(this.#programs.render.program);
         gl.uniform1i(this.#programs.render.uniformLocations.uData0, 0);
         gl.uniform1i(this.#programs.render.uniformLocations.uTransferFunction, 1);
+        gl.uniform2f(this.#programs.render.uniformLocations.uMouse, mouseX, mouseY);
+        gl.uniform1f(this.#programs.render.uniformLocations.uLightIntensity, this.#renderData.lightIntensity);
+        gl.uniform3fv(this.#programs.render.uniformLocations.uLightColor, this.#renderData.lightColor);
 
         gl.activeTexture(gl.TEXTURE0 + 0);
         gl.bindTexture(gl.TEXTURE_2D, readPass.textures.data0);
 
         gl.activeTexture(gl.TEXTURE0 + 1);
-        gl.bindTexture(gl.TEXTURE_2D, this.#transferFunction);
+        gl.bindTexture(gl.TEXTURE_2D, this.#renderData.transferFunction);
 
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
@@ -330,10 +357,6 @@ export default class ALifeTask {
             return;
         }
 
-        if (this.#brush === null && params.action !== 'down') {
-            return;
-        }
-
         const gl = this.#gl;
 
         const modeEnum = {draw:0, erase:1}[params.mode];
@@ -341,11 +364,17 @@ export default class ALifeTask {
         const endY = this.#canvas.height - params.y;
         const startX = this.#brush?.x ?? endX;
         const startY = this.#brush?.y ?? endY;
+
+        if (params.action === 'down') {
+            const a = 0;
+        }
         
-        this.#brush = params.action === 'up' ? null : {x: endX, y: endY};
-        if (params.action === 'up') {
+        this.#brush = {x: endX, y: endY, down: this.#brush?.down || params.action === 'down'};
+        if (params.action === 'up' || !this.#brush.down) {
+            this.#brush.down = false;
             return;
         }
+        this.#brush.down = true;
 
         const color = [
             params.channel === 'R' ? params.intensity / 255 : 0,

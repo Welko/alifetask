@@ -109,8 +109,8 @@
         .custom-ul > li:before {
             content: '';
             display: inline-block;
-            width: 1em;
-            height: 1em;
+            min-width: 1em;
+            min-height: 1em;
             background-size: contain;
             background-repeat: no-repeat;
             margin-right: 0.5em;
@@ -129,6 +129,9 @@
         }
         .bullet-speed:before {
             background-image: url('https://www.svgrepo.com/show/521235/speed.svg');
+        }
+        .bullet-light:before {
+            background-image: url('https://www.svgrepo.com/show/521525/bulb.svg');
         }
         .bullet-du:before {
             background-image: url('res/du.svg');
@@ -251,7 +254,7 @@
             <li class="bullet-circle">
                 <span class="slider">
                     <label for="radiusSlider" id="radiusSliderLabel" style="width: 2em;"></label>
-                    <input type="range" id="radiusSlider" min="1" max="100" value="20" oninput="setRadius(this.value)">
+                    <input type="range" id="radiusSlider" min="1" max="100" value="10" oninput="setRadius(this.value)">
                 </span>
             </li>
             <li class="bullet-refresh">
@@ -264,6 +267,15 @@
         <div class="separator"></div>
 
         <h2>Visuals</h2>
+        <ul class="custom-ul">
+            <li class="bullet-light">
+                <span style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5em;">
+                    <input type="range" id="lightIntensitySlider" min="0" max="10" value="5" oninput="updateLight()">
+                    <input type="color" id="lightColorInput" value="#f8ee34" oninput="updateLight()">
+                </span>
+            </li>
+        </ul>
+        <div class="spacing"></div>
         <select id="schemesSelect" disabled>
             <option value="">Loading...</option>
         </select>
@@ -301,6 +313,7 @@
         const clearIntensity = 255;
         let params;
         let scheme;
+        let light;
 
         let interval;
         function play() {
@@ -351,6 +364,15 @@
             }
         }
         setSpeed(speedSlider.value);
+
+        function updateLight() {
+            light = {
+                intensity: parseFloat(lightIntensitySlider.value),
+                color: lightColorInput.value,
+            };
+            if (window.app) app.light = light;
+        }
+        updateLight();
 
         function updateParams() {
             params = {
@@ -453,6 +475,10 @@
             document.getElementById('canvasContainer').appendChild(app.domElement);
 
             app.initialize({width, height}).then(() => {
+                app.scheme = scheme;
+                app.params = params;
+                app.light = light;
+
                 const brush = (event, action) => {
                     const channel = event.buttons === 1 ? 'G' : 'R';
                     const mode = 'draw';
