@@ -6,7 +6,7 @@
         "killRate": 0.06,
         "diffusionRateU": 1,
         "diffusionRateV": 0.2,
-        "deltaTime": 0.5
+        "deltaTime": 1
     },
     {
         "name": "Spots",
@@ -15,7 +15,7 @@
         "killRate": 0.062,
         "diffusionRateU": 1,
         "diffusionRateV": 0.2,
-        "deltaTime": 0.5
+        "deltaTime": 1
     },
     {
         "name": "Pulsating spots",
@@ -24,7 +24,7 @@
         "killRate": 0.06,
         "diffusionRateU": 1,
         "diffusionRateV": 0.2,
-        "deltaTime": 0.5
+        "deltaTime": 1
     },
     {
         "name": "Holes",
@@ -33,7 +33,7 @@
         "killRate": 0.058,
         "diffusionRateU": 1,
         "diffusionRateV": 0.2,
-        "deltaTime": 0.5
+        "deltaTime": 1
     },
     {
         "name": "Spatiotemporal chaos",
@@ -42,7 +42,7 @@
         "killRate": 0.051,
         "diffusionRateU": 1,
         "diffusionRateV": 0.2,
-        "deltaTime": 0.5
+        "deltaTime": 1
     },
     {
         "name": "Intermittent chaos/holes",
@@ -51,7 +51,7 @@
         "killRate": 0.056,
         "diffusionRateU": 1,
         "diffusionRateV": 0.2,
-        "deltaTime": 0.5
+        "deltaTime": 1
     },
     {
         "name": "Moving spots (glider-like)",
@@ -60,7 +60,7 @@
         "killRate": 0.054,
         "diffusionRateU": 1,
         "diffusionRateV": 0.2,
-        "deltaTime": 0.5
+        "deltaTime": 1
     },
     {
         "name": "Small waves",
@@ -69,7 +69,7 @@
         "killRate": 0.051,
         "diffusionRateU": 1,
         "diffusionRateV": 0.2,
-        "deltaTime": 0.5
+        "deltaTime": 1
     },
     {
         "name": "Big waves",
@@ -78,6 +78,6 @@
         "killRate": 0.045,
         "diffusionRateU": 1,
         "diffusionRateV": 0.2,
-        "deltaTime": 0.5
+        "deltaTime": 1
     }
 ]
